@@ -1,7 +1,7 @@
 fastapi
-uvicorn
+uvicorn[standard]
+python-multipart
 requests
 beautifulsoup4
 PyPDF2
 python-docx
-python-multipart
