@@ -12,7 +12,7 @@ app = FastAPI()
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Replace with your Vercel frontend URL in production
+    allow_origins=["https://masterwise-1ne8pyxle-emma-wangs-projects.vercel.app"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -39,18 +39,15 @@ def extract_text_from_url(url: str) -> str:
         response = requests.get(url, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
-        # Extract text from relevant HTML elements (adjust selectors as needed)
         text = soup.get_text(separator=" ", strip=True)
         return text
     except requests.RequestException as e:
         raise Exception(f"Failed to fetch job posting: {str(e)}")
 
 def compare_texts(job_text: str, resume_text: str) -> dict:
-    # Placeholder for comparison logic (e.g., using AI or keyword matching)
-    # This is where you would integrate an AI model or custom comparison algorithm
     job_summary = job_text[:500] + "..."  # Truncate for demo
-    resume_summary = resume_text[:1500] + "..."  # Truncate to 1500-1700 chars
-    match_score = 85  # Placeholder; calculate based on actual comparison
+    resume_summary = job_text[:1500] + "..."  # Truncate to 1500-1700 chars
+    match_score = 85  # Placeholder
     work_experience = [
         "Extracted relevant experience 1",
         "Extracted relevant experience 2",
@@ -61,7 +58,6 @@ def compare_texts(job_text: str, resume_text: str) -> dict:
     cover_letter = (
         "Dear Hiring Manager,\n\nBased on the job posting, I have tailored this cover letter to highlight relevant skills and experiences from the resume.\n\nSincerely,\nApplicant"
     )
-
     return {
         "job_summary": job_summary,
         "match_score": match_score,
@@ -84,13 +80,10 @@ async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
                 status_code=400,
                 content={"error": "Unsupported file format. Please upload PDF or DOCX."},
             )
-
         # Extract text from job URL
         job_text = extract_text_from_url(job_url)
-
         # Compare texts and generate outputs
         result = compare_texts(job_text, resume_text)
-
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(
