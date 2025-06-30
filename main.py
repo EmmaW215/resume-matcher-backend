@@ -39,28 +39,37 @@ async def call_xai_api(prompt: str, system_prompt: str = "You are a helpful AI a
             ],
             "max_tokens": 2000
         }
-        async with session.post("https://api.x.ai/v1/chat/completions", headers=headers, json=data) as response:
-            if response.status != 200:
-                error_text = await response.text()
-                raise Exception(f"xAI API error: {response.status} - {error_text}")
-            result = await response.json()
-            return result["choices"][0]["message"]["content"]
+        try:
+            async with session.post("https://api.x.ai/v1/chat/completions", headers=headers, json=data) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise Exception(f"xAI API error: {response.status} - {error_text}")
+                result = await response.json()
+                return result["choices"][0]["message"]["content"]
+        except aiohttp.ClientError as e:
+            raise Exception(f"xAI API request failed: {str(e)}")
 
 def extract_text_from_pdf(file: UploadFile) -> str:
-    content = file.file.read()
-    pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text() or ""
-    return text.strip()
+    try:
+        content = file.file.read()
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text() or ""
+        return text.strip()
+    except Exception as e:
+        raise Exception(f"Failed to extract PDF text: {str(e)}")
 
 def extract_text_from_docx(file: UploadFile) -> str:
-    content = file.file.read()
-    doc = Document(io.BytesIO(content))
-    text = ""
-    for para in doc.paragraphs:
-        text += para.text + "\n"
-    return text.strip()
+    try:
+        content = file.file.read()
+        doc = Document(io.BytesIO(content))
+        text = ""
+        for para in doc.paragraphs:
+            text += para.text + "\n"
+        return text.strip()
+    except Exception as e:
+        raise Exception(f"Failed to extract DOCX text: {str(e)}")
 
 def extract_text_from_url(url: str) -> str:
     try:
@@ -81,87 +90,90 @@ def extract_text_from_url(url: str) -> str:
         raise Exception(f"Failed to fetch job posting: {str(e)}")
 
 async def compare_texts(job_text: str, resume_text: str) -> dict:
-    # a. Job Summary
-    job_summary_prompt = (
-        "Please read the following job posting content:\n\n"
-        f"{job_text}\n\n"
-        "Summarize the key job requirements from the job descriptions, providing a brief job requirement summary including: Skills & Technical Requirements, Responsibilities, and Qualifications."
-    )
-    job_summary = await call_xai_api(job_summary_prompt)
-    job_summary = f"Job Requirement Summary:\n{job_summary}"
+    try:
+        # a. Job Summary
+        job_summary_prompt = (
+            "Please read the following job posting content:\n\n"
+            f"{job_text}\n\n"
+            "Summarize the key job requirements from the job descriptions, providing a brief job requirement summary including: Skills & Technical Requirements, Responsibilities, and Qualifications."
+        )
+        job_summary = await call_xai_api(job_summary_prompt)
+        job_summary = f"Job Requirement Summary:\n{job_summary}"
 
-    # b. Resume Summary with Comparison Table
-    resume_summary_prompt = (
-        "Read the following resume content:\n\n"
-        f"{resume_text}\n\n"
-        "And the following job summary:\n\n"
-        f"{job_summary}\n\n"
-        "Highlight the user's key skills and experiences, then provide a comparison table based on the resume and job summary. List the key requirements and skills as column Categories, Match status (Strong/Moderate-strong/Partial/Lack), and Comments (very precise comment on how the user experiences matches with the job requirement)."
-    )
-    resume_summary = await call_xai_api(resume_summary_prompt)
-    resume_summary = f"Resume - Job Posting Comparison:\n\n{resume_summary}"
+        # b. Resume Summary with Comparison Table
+        resume_summary_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job summary:\n\n"
+            f"{job_summary}\n\n"
+            "Highlight the user's key skills and experiences, then provide a comparison table based on the resume and job summary. List the key requirements and skills as column Categories, Match status (Strong/Moderate-strong/Partial/Lack), and Comments (very precise comment on how the user experiences matches with the job requirement)."
+        )
+        resume_summary = await call_xai_api(resume_summary_prompt)
+        resume_summary = f"Resume - Job Posting Comparison:\n\n{resume_summary}"
 
-    # c. Match Score
-    match_score_prompt = (
-        "Read the following resume content:\n\n"
-        f"{resume_text}\n\n"
-        "And the following job content:\n\n"
-        f"{job_text}\n\n"
-        "Calculate and show a percentage score. The calculation formula is (Count_Match) divided by (Count_Total).\n"
-        "Inside which: Count_Total=sum of (weight_match_total); Count_Match=sum of (weight_match_score).\n"
-        "The mapping between match_type with weight_match_total and weight_match_score are:\n"
-        "Category | match_type | weight_match_score | weight_match_total | Comments\n"
-        "✅ Strong | 1 | 1 | \n"
-        "✅ Moderate-Strong | 0.8 | 1 | \n"
-        "⚠️ Partial | 0.5 | 1 | \n"
-        "Lack | 0 | 1 | \n"
-        "Return only the percentage score as a number rounded to two decimal places."
-    )
-    match_score = float(await call_xai_api(match_score_prompt))
+        # c. Match Score
+        match_score_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job content:\n\n"
+            f"{job_text}\n\n"
+            "Calculate and show a percentage score. The calculation formula is (Count_Match) divided by (Count_Total).\n"
+            "Inside which: Count_Total=sum of (weight_match_total); Count_Match=sum of (weight_match_score).\n"
+            "The mapping between match_type with weight_match_total and weight_match_score are:\n"
+            "Category | match_type | weight_match_score | weight_match_total | Comments\n"
+            "✅ Strong | 1 | 1 | \n"
+            "✅ Moderate-Strong | 0.8 | 1 | \n"
+            "⚠️ Partial | 0.5 | 1 | \n"
+            "Lack | 0 | 1 | \n"
+            "Return only the percentage score as a number rounded to two decimal places."
+        )
+        match_score = float(await call_xai_api(match_score_prompt))
 
-    # d. Tailored Resume Summary
-    tailored_resume_summary_prompt = (
-        "Read the following resume content:\n\n"
-        f"{resume_text}\n\n"
-        "And the following job content:\n\n"
-        f"{job_text}\n\n"
-        "Provide a brief resume summary to ensure the user experiences are better matched with the job requirements. Keep the overall summary within 1700 characters."
-    )
-    tailored_resume_summary = await call_xai_api(tailored_resume_summary_prompt)
-    tailored_resume_summary = f"Tailored Resume Summary:\n{tailored_resume_summary}"
+        # d. Tailored Resume Summary
+        tailored_resume_summary_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job content:\n\n"
+            f"{job_text}\n\n"
+            "Provide a brief resume summary to ensure the user experiences are better matched with the job requirements. Keep the overall summary within 1700 characters."
+        )
+        tailored_resume_summary = await call_xai_api(tailored_resume_summary_prompt)
+        tailored_resume_summary = f"Tailored Resume Summary:\n{tailored_resume_summary}"
 
-    # e. Tailored Work Experience
-    tailored_work_experience_prompt = (
-        "Read the following resume content:\n\n"
-        f"{resume_text}\n\n"
-        "And the following job content:\n\n"
-        f"{job_text}\n\n"
-        "Find the latest work experiences from the resume_text, modify the work experience details according to user experiences to better match with the job requirements. Keep the output work experience in bullet format, and overall within 7 bullets."
-    )
-    tailored_work_experience_text = await call_xai_api(tailored_work_experience_prompt)
-    tailored_work_experience = [line.strip() for line in tailored_work_experience_text.split("\n") if line.strip().startswith("-")]
-    tailored_work_experience = tailored_work_experience[:7]
-    tailored_work_experience = [f"Tailored Resume Work Experience:\n{item}" for item in tailored_work_experience]
+        # e. Tailored Work Experience
+        tailored_work_experience_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job content:\n\n"
+            f"{job_text}\n\n"
+            "Find the latest work experiences from the resume_text, modify the work experience details according to user experiences to better match with the job requirements. Keep the output work experience in bullet format, and overall within 7 bullets."
+        )
+        tailored_work_experience_text = await call_xai_api(tailored_work_experience_prompt)
+        tailored_work_experience = [line.strip() for line in tailored_work_experience_text.split("\n") if line.strip().startswith("-")]
+        tailored_work_experience = tailored_work_experience[:7]
+        tailored_work_experience = [f"Tailored Resume Work Experience:\n{item}" for item in tailored_work_experience]
 
-    # f. Cover Letter
-    cover_letter_prompt = (
-        "Read the following resume content:\n\n"
-        f"{resume_text}\n\n"
-        "And the following job content:\n\n"
-        f"{job_text}\n\n"
-        "Provide a formal cover letter for applying to the job. The cover letter should highlight the user's best fit skills and experiences according to the job posting, show the user's strengths and passions for the position, and express appreciation for a future interview opportunity."
-    )
-    cover_letter = await call_xai_api(cover_letter_prompt)
-    cover_letter = f"Cover Letter:\n{cover_letter}"
+        # f. Cover Letter
+        cover_letter_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job content:\n\n"
+            f"{job_text}\n\n"
+            "Provide a formal cover letter for applying to the job. The cover letter should highlight the user's best fit skills and experiences according to the job posting, show the user's strengths and passions for the position, and express appreciation for a future interview opportunity."
+        )
+        cover_letter = await call_xai_api(cover_letter_prompt)
+        cover_letter = f"Cover Letter:\n{cover_letter}"
 
-    return {
-        "job_summary": job_summary,
-        "resume_summary": resume_summary,
-        "match_score": match_score,
-        "tailored_resume_summary": tailored_resume_summary,
-        "tailored_work_experience": tailored_work_experience,
-        "cover_letter": cover_letter,
-    }
+        return {
+            "job_summary": job_summary,
+            "resume_summary": resume_summary,
+            "match_score": match_score,
+            "tailored_resume_summary": tailored_resume_summary,
+            "tailored_work_experience": tailored_work_experience,
+            "cover_letter": cover_letter,
+        }
+    except Exception as e:
+        raise Exception(f"Comparison failed: {str(e)}")
 
 @app.post("/api/compare")
 async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
@@ -193,3 +205,5 @@ def root():
 def health():
     return {"status": "ok"}
 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
