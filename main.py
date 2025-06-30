@@ -104,20 +104,38 @@ def health():
 
 from fastapi.responses import HTMLResponse
 from fastapi import Query
-import requests
-from bs4 import BeautifulSoup
 
 @app.get("/preview/job", response_class=HTMLResponse)
 async def preview_job(job_url: str = Query(...)):
     try:
-        response = requests.get(job_url, timeout=10)
-        soup = BeautifulSoup(response.content, "html.parser")
-        text = soup.get_text()
-        preview = text[:3000].replace("\n", "<br>")
+        job_text = extract_text_from_url(job_url)
+        preview = job_text[:3000].replace("\n", "<br>").replace("  ", "&nbsp;&nbsp;")
         return f"<h2>🔍 Job Description Preview</h2><p>{preview}</p>"
     except Exception as e:
-        return f"<p>Error fetching job description: {str(e)}</p>"
+        return f"<p>Error fetching job: {str(e)}</p>"
 
+@app.get("/preview/resume", response_class=HTMLResponse)
+async def preview_resume_form():
+    return """
+    <h2>📄 Upload a Resume File to Preview</h2>
+    <form action="/preview/resume" method="post" enctype="multipart/form-data">
+        <input type="file" name="resume">
+        <input type="submit" value="Upload & Preview">
+    </form>
+    """
 
+@app.post("/preview/resume", response_class=HTMLResponse)
+async def preview_resume(resume: UploadFile = File(...)):
+    try:
+        if resume.filename.endswith(".pdf"):
+            text = extract_text_from_pdf(resume)
+        elif resume.filename.endswith((".doc", ".docx")):
+            text = extract_text_from_docx(resume)
+        else:
+            return "<p>❌ Unsupported file format. Please upload a PDF or DOCX.</p>"
+        preview = text[:3000].replace("\n", "<br>").replace("  ", "&nbsp;&nbsp;")
+        return f"<h2>📄 Resume Preview</h2><p>{preview}</p>"
+    except Exception as e:
+        return f"<p>Error reading resume: {str(e)}</p>"
 
 
