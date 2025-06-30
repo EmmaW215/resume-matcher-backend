@@ -125,7 +125,7 @@ def compare_texts(job_text: str, resume_summary_text: str, resume_experience_tex
         elif section.startswith("Responsibilities"):
             job_requirements.extend([s.strip() for s in section.replace("Responsibilities:", "").split(".") if s.strip()])
         elif section.startswith("Qualifications"):
-            job_requirements.extend光的 job_requirements.extend([s.strip() for s in section.replace("Qualifications:", "").split(".") if s.strip()])
+            job_requirements.extend([s.strip() for s in section.replace("Qualifications:", "").split(".") if s.strip()])
     
     comparison_table = []
     count_total = 0
