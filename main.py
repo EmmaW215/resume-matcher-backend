@@ -9,6 +9,15 @@ from docx import Document
 import io
 import uvicorn
 
+from fastapi.responses import HTMLResponse
+from fastapi import Request, Query
+from PyPDF2 import PdfReader
+from docx import Document
+import io
+import requests
+from bs4 import BeautifulSoup
+
+
 app = FastAPI()
 
 app.add_middleware(
@@ -100,3 +109,41 @@ def root():
 def health():
     return {"status": "ok"}
 
+@app.get("/preview/job", response_class=HTMLResponse)
+async def preview_job(job_url: str = Query(...)):
+    try:
+        response = requests.get(job_url, timeout=10)
+        soup = BeautifulSoup(response.content, "html.parser")
+        text = soup.get_text()
+        preview = text[:3000].replace("\n", "<br>")
+        return f"<h2>🔍 Job Description Preview</h2><p>{preview}</p>"
+    except Exception as e:
+        return f"<p>Error fetching job description: {str(e)}</p>"
+
+
+@app.get("/preview/resume", response_class=HTMLResponse)
+async def resume_upload_form():
+    return """
+    <h2>📄 Upload Resume File</h2>
+    <form action="/preview/resume" method="post" enctype="multipart/form-data">
+        <input type="file" name="resume">
+        <input type="submit">
+    </form>
+    """
+
+@app.post("/preview/resume", response_class=HTMLResponse)
+async def preview_resume(resume: UploadFile = File(...)):
+    content = await resume.read()
+    text = ""
+
+    if resume.filename.endswith(".pdf"):
+        pdf = PdfReader(io.BytesIO(content))
+        text = "\n".join(page.extract_text() for page in pdf.pages if page.extract_text())
+    elif resume.filename.endswith(".docx"):
+        doc = Document(io.BytesIO(content))
+        text = "\n".join(p.text for p in doc.paragraphs)
+    else:
+        return "Unsupported file type."
+
+    preview = text[:3000].replace("\n", "<br>")
+    return f"<h2>📄 Resume Preview</h2><p>{preview}</p>"
