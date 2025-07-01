@@ -1,8 +1,8 @@
 fastapi
 uvicorn[standard]
 python-multipart
-requests
-beautifulsoup4
-PyPDF2
+pydantic
+openai
+playwright
 python-docx
-aiohttp
+pymupdf

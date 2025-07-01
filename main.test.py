@@ -23,7 +23,7 @@ app.add_middleware(
 
 # --- API Endpoints ---
 
-@app.post("https://resume-matcher-backend-f7nx.onrender.com")
+@app.post("https://resume-matcher-backend-f7nx.onrender.com/api/compare")
 async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
     # 1. Web Scraping: 用 Playwright 抓取 job_url 的内容
     # 2. Resume Parsing: 解析 PDF/DOCX

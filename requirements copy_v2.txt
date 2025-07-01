@@ -1,0 +1,8 @@
+echo "fastapi
+uvicorn[standard]
+python-multipart
+requests
+beautifulsoup4
+PyPDF2
+python-docx
+aiohttp" > requirements.txt
