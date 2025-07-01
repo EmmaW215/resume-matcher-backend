@@ -7,8 +7,6 @@ from bs4 import BeautifulSoup
 import PyPDF2
 from docx import Document
 import io
-import uvicorn
-
 
 app = FastAPI()
 
@@ -48,7 +46,7 @@ def extract_text_from_url(url: str) -> str:
 
 def compare_texts(job_text: str, resume_text: str) -> dict:
     job_summary = job_text[:500] + "..."  # Truncate for demo
-    resume_summary = job_text[:1500] + "..."  # Truncate to 1500-1700 chars
+    resume_summary = resume_text[:1500] + "..."  # Fixed: use resume_text
     match_score = 85  # Placeholder
     work_experience = [
         "Extracted relevant experience 1",
@@ -86,6 +84,9 @@ async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
         job_text = extract_text_from_url(job_url)
         # Compare texts and generate outputs
         result = compare_texts(job_text, resume_text)
+        # Include raw texts in the response for preview
+        result["resume_text"] = resume_text
+        result["job_text"] = job_text
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(
@@ -101,3 +102,5 @@ def root():
 def health():
     return {"status": "ok"}
 
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
