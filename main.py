@@ -89,7 +89,7 @@ async def generate_mock_ai_response(prompt: str, system_prompt: str = "You are a
     """本地模拟AI响应，作为最后的备用方案"""
     # 根据提示类型生成相应的模拟响应
     if "job posting" in prompt.lower() and "summarize" in prompt.lower():
-        return """Key Requirements from this Job Posting
+        return """
 
 🔧 Skills & Technical Expertise
 Technical program management (Agile, Scrum, Kanban)
@@ -232,7 +232,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "Summarize the key job requirements from the job descriptions, providing a brief job requirement summary including: Skills & Technical Requirements, Responsibilities, and Qualifications."
         )
         job_summary = await call_ai_api(job_summary_prompt)
-        job_summary = f"Job Requirement Summary:\n{job_summary}"
+        job_summary = f"Key Requirements from this Job Posting:\n{job_summary}"
 
         # b. Resume Summary with Comparison Table
         resume_summary_prompt = (
