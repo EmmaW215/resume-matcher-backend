@@ -41,9 +41,10 @@ async def call_openai_api(prompt: str, system_prompt: str = "You are a helpful A
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
         raise Exception("OPENAI_API_KEY not set in environment variables")
-    openai.api_key = api_key
+    
     try:
-        response = await openai.ChatCompletion.acreate(
+        client = openai.AsyncOpenAI(api_key=api_key)
+        response = await client.chat.completions.create(
             model="gpt-4",  # 可切换为gpt-3.5-turbo
             messages=[
                 {"role": "system", "content": system_prompt},
