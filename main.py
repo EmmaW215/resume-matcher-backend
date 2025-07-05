@@ -89,12 +89,30 @@ async def generate_mock_ai_response(prompt: str, system_prompt: str = "You are a
     """本地模拟AI响应，作为最后的备用方案"""
     # 根据提示类型生成相应的模拟响应
     if "job posting" in prompt.lower() and "summarize" in prompt.lower():
-        return """Key Job Requirements Summary:
-• Technical Skills: Python, JavaScript, React, Node.js, AWS
-• Experience: 3+ years in software development
-• Responsibilities: Full-stack development, API design, database management
-• Qualifications: Bachelor's degree in Computer Science or related field
-• Soft Skills: Team collaboration, problem-solving, communication"""
+        return """Key Requirements from this Job Posting
+
+🔧 Skills & Technical Expertise
+Technical program management (Agile, Scrum, Kanban)
+Software development lifecycle & modern architecture principles
+Data-driven program governance and KPI tracking
+Change management and process optimization
+Strong stakeholder engagement and cross-functional communication
+Budget/resource management across engineering initiatives
+
+🎯 Responsibilities
+Drive technical strategy and execution across multi-team engineering initiatives
+Develop and maintain technical roadmaps
+Resolve technical dependencies and risks
+Lead end-to-end program management
+Implement scalable governance frameworks and metrics
+Collaborate across engineering, product, and business functions
+Lead high-priority strategic programs and change management
+
+🎓 Qualifications
+10+ years in technical program management roles
+Bachelor's in Engineering, Computer Science, or related
+PMP certification preferred
+Strong leadership, organizational and communication skills"""
     
     elif "comparison table" in prompt.lower():
         return """Resume - Job Posting Comparison:
