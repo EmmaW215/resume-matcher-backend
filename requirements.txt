@@ -5,4 +5,7 @@ pydantic
 openai
 playwright
 python-docx
-pymupdf
+PyPDF2
+aiohttp
+beautifulsoup4
+requests

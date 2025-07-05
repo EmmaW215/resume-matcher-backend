@@ -7,230 +7,204 @@ from bs4 import BeautifulSoup
 import PyPDF2
 from docx import Document
 import io
-import re
+import aiohttp
+import json
+import os
 
 app = FastAPI()
 
+# CORS configuration - support multiple domains
+allowed_origins = [
+    "https://resume-matcher-frontend.vercel.app",
+    "https://resume-update-frontend.vercel.app", 
+    "https://matchwise-ai.vercel.app",
+    "http://localhost:3000",  # For local development
+    "http://localhost:3001",  # Alternative local port
+]
+
+# Allow environment variable override
+if os.getenv("ALLOWED_ORIGINS"):
+    additional_origins = os.getenv("ALLOWED_ORIGINS")
+    if additional_origins:
+        allowed_origins.extend(additional_origins.split(","))
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://resume-update-frontend.vercel.app"],
+    allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-def extract_text_from_pdf(file: UploadFile) -> tuple[str, str]:
-    content = file.file.read()
-    pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
-    text = ""
-    for page in pdf_reader.pages:
-        text += page.extract_text() or ""
+async def call_xai_api(prompt: str, system_prompt: str = "You are a helpful AI assistant specializing in job application analysis.") -> str:
+    api_key = os.getenv("XAI_API_KEY")
+    if not api_key:
+        raise Exception("XAI_API_KEY not set in environment variables")
     
-    # Extract Summary section
-    summary_text = ""
-    summary_match = re.search(r"(?:Summary|Professional Summary|Profile)[:\n\s]*(.*?)(?=\n\s*(?:Experience|Work Experience|Education|Skills|\Z))", text, re.IGNORECASE | re.DOTALL)
-    if summary_match:
-        summary_text = summary_match.group(1).strip()
-    
-    # Extract latest Work Experience
-    experience_text = ""
-    experience_matches = re.findall(r"(?:Experience|Work Experience)[:\n\s]*(.*?)(?=\n\s*(?:Education|Skills|Summary|\Z))", text, re.IGNORECASE | re.DOTALL)
-    if experience_matches:
-        # Assume the first match is the most recent (top of resume)
-        experience_text = experience_matches[0].strip()
-        # Split into lines and take the first job entry (heuristic for latest)
-        lines = experience_text.split("\n")
-        latest_job = []
-        for line in lines:
-            if re.match(r"\d{4}\s*-\s*(?:\d{4}|Present)", line, re.IGNORECASE):
-                if latest_job:  # Start of next job, break
-                    break
-            latest_job.append(line)
-        experience_text = "\n".join(latest_job).strip()
-    
-    return summary_text, experience_text
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "grok-3",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": 2000
+        }
+        try:
+            async with session.post("https://api.x.ai/v1/chat/completions", headers=headers, json=data) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise Exception(f"xAI API error: {response.status} - {error_text}")
+                result = await response.json()
+                return result["choices"][0]["message"]["content"]
+        except aiohttp.ClientError as e:
+            raise Exception(f"xAI API request failed: {str(e)}")
 
-def extract_text_from_docx(file: UploadFile) -> tuple[str, str]:
-    content = file.file.read()
-    doc = Document(io.BytesIO(content))
-    text = ""
-    for para in doc.paragraphs:
-        text += para.text + "\n"
-    
-    # Extract Summary section
-    summary_text = ""
-    summary_match = re.search(r"(?:Summary|Professional Summary|Profile)[:\n\s]*(.*?)(?=\n\s*(?:Experience|Work Experience|Education|Skills|\Z))", text, re.IGNORECASE | re.DOTALL)
-    if summary_match:
-        summary_text = summary_match.group(1).strip()
-    
-    # Extract latest Work Experience
-    experience_text = ""
-    experience_matches = re.findall(r"(?:Experience|Work Experience)[:\n\s]*(.*?)(?=\n\s*(?:Education|Skills|Summary|\Z))", text, re.IGNORECASE | re.DOTALL)
-    if experience_matches:
-        # Assume the first match is the most recent
-        experience_text = experience_matches[0].strip()
-        # Split into lines and take the first job entry
-        lines = experience_text.split("\n")
-        latest_job = []
-        for line in lines:
-            if re.match(r"\d{4}\s*-\s*(?:\d{4}|Present)", line, re.IGNORECASE):
-                if latest_job:  # Start of next job, break
-                    break
-            latest_job.append(line)
-        experience_text = "\n".join(latest_job).strip()
-    
-    return summary_text, experience_text
+def extract_text_from_pdf(file: UploadFile) -> str:
+    try:
+        content = file.file.read()
+        pdf_reader = PyPDF2.PdfReader(io.BytesIO(content))
+        text = ""
+        for page in pdf_reader.pages:
+            text += page.extract_text() or ""
+        return text.strip()
+    except Exception as e:
+        raise Exception(f"Failed to extract PDF text: {str(e)}")
+
+def extract_text_from_docx(file: UploadFile) -> str:
+    try:
+        content = file.file.read()
+        doc = Document(io.BytesIO(content))
+        text = ""
+        for para in doc.paragraphs:
+            text += para.text + "\n"
+        return text.strip()
+    except Exception as e:
+        raise Exception(f"Failed to extract DOCX text: {str(e)}")
 
 def extract_text_from_url(url: str) -> str:
     try:
-        response = requests.get(url, timeout=10)
+        headers = {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9',
+            'Referer': 'https://www.google.com/',
+            'Connection': 'keep-alive',
+            'Upgrade-Insecure-Requests': '1',
+        }
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         full_text = soup.get_text(separator=" ", strip=True)
-        
-        # Summarize key job requirements (Skills, Responsibilities, Qualifications)
-        summary = []
-        
-        # Extract Skills & Technical Requirements
-        skills_match = re.search(r"(?:Skills|Technical Skills|Requirements|Technologies)[:\n\s]*(.*?)(?=\n\s*(?:Responsibilities|Qualifications|Duties|\Z))", full_text, re.IGNORECASE | re.DOTALL)
-        skills_text = skills_match.group(1).strip() if skills_match else "No skills section found."
-        summary.append(f"Skills & Technical Requirements: {skills_text[:500]}...")
-        
-        # Extract Responsibilities
-        responsibilities_match = re.search(r"(?:Responsibilities|Duties|Key Duties)[:\n\s]*(.*?)(?=\n\s*(?:Qualifications|Skills|\Z))", full_text, re.IGNORECASE | re.DOTALL)
-        responsibilities_text = responsibilities_match.group(1).strip() if responsibilities_match else "No responsibilities section found."
-        summary.append(f"Responsibilities: {responsibilities_text[:500]}...")
-        
-        # Extract Qualifications
-        qualifications_match = re.search(r"(?:Qualifications|Education|Experience Requirements)[:\n\s]*(.*?)(?=\n\s*(?:Skills|Responsibilities|\Z))", full_text, re.IGNORECASE | re.DOTALL)
-        qualifications_text = qualifications_match.group(1).strip() if qualifications_match else "No qualifications section found."
-        summary.append(f"Qualifications: {qualifications_text[:500]}...")
-        
-        return "\n\n".join(summary)
+        return full_text
     except requests.RequestException as e:
         raise Exception(f"Failed to fetch job posting: {str(e)}")
 
-def compare_texts(job_text: str, resume_summary_text: str, resume_experience_text: str) -> dict:
-    # Combine resume summary and experience for comparison
-    resume_text = f"{resume_summary_text}\n\n{resume_experience_text}"
-    
-    # Job Requirement Summary
-    job_summary = f"Job Requirement Summary:\n{job_text}"
-    
-    # Comparison table (heuristic keyword matching as placeholder)
-    job_requirements = []
-    for section in job_text.split("\n\n"):
-        if section.startswith("Skills"):
-            job_requirements.extend([s.strip() for s in section.replace("Skills & Technical Requirements:", "").split(",") if s.strip()])
-        elif section.startswith("Responsibilities"):
-            job_requirements.extend([s.strip() for s in section.replace("Responsibilities:", "").split(".") if s.strip()])
-        elif section.startswith("Qualifications"):
-            job_requirements.extend([s.strip() for s in section.replace("Qualifications:", "").split(".") if s.strip()])
-    
-    comparison_table = []
-    count_total = 0
-    count_match = 0
-    
-    for req in job_requirements[:10]:  # Limit to 10 categories for brevity
-        count_total += 1
-        # Simple keyword matching
-        req_lower = req.lower()
-        if req_lower in resume_text.lower():
-            match_status = "Strong"
-            match_score = 1.0
-            comment = f"Strong match: '{req}' found in resume summary or experience."
-        elif any(word in resume_text.lower() for word in req_lower.split()):
-            match_status = "Partial"
-            match_score = 0.5
-            comment = f"Partial match: Some aspects of '{req}' found in resume."
-        else:
-            match_status = "Lack"
-            match_score = 0.0
-            comment = f"No match: '{req}' not found in resume."
-        comparison_table.append({
-            "Category": req,
-            "Match": match_status,
-            "Comments": comment
-        })
-        count_match += match_score
-    
-    # Calculate match score
-    match_score = (count_match / count_total) * 100 if count_total > 0 else 0
-    
-    # Resume - Job Posting Comparison
-    resume_summary = (
-        f"Resume - Job Posting Comparison:\n\n"
-        f"Resume Summary:\n{resume_summary_text}\n\n"
-        f"Relevant Work Experience:\n{resume_experience_text}\n\n"
-        f"Comparison Table:\n"
-        + "\n".join(
-            f"- {item['Category']}: {item['Match']} ({item['Comments']})"
-            for item in comparison_table
+async def compare_texts(job_text: str, resume_text: str) -> dict:
+    try:
+        # a. Job Summary
+        job_summary_prompt = (
+            "Please read the following job posting content:\n\n"
+            f"{job_text}\n\n"
+            "Summarize the key job requirements from the job descriptions, providing a brief job requirement summary including: Skills & Technical Requirements, Responsibilities, and Qualifications."
         )
-    )
-    
-    # Tailored Resume Summary
-    tailored_resume_summary = resume_summary_text[:1700]
-    # Placeholder: Optimize by emphasizing job-relevant keywords
-    for req in job_requirements:
-        if req.lower() in resume_text.lower() and req.lower() not in tailored_resume_summary.lower():
-            tailored_resume_summary += f" {req}."
-        if len(tailored_resume_summary) > 1700:
-            tailored_resume_summary = tailored_resume_summary[:1697] + "..."
-            break
-    
-    # Tailored Work Experience
-    experience_lines = resume_experience_text.split("\n")
-    tailored_experience = []
-    for line in experience_lines[:7]:  # Limit to 7 bullets
-        tailored_line = line
-        for req in job_requirements:
-            if req.lower() in line.lower():
-                tailored_line = f"**{line}** (Matches: {req})"
-                break
-        tailored_experience.append(tailored_line)
-    tailored_work_experience = tailored_experience[:7]
-    
-    # Cover Letter
-    cover_letter = (
-        "Dear Hiring Manager,\n\n"
-        "I am excited to apply for this position. My skills and experiences align closely with the job requirements, particularly in the following areas:\n"
-        + "\n".join(
-            f"- {req}: Demonstrated through {resume_experience_text[:100]}..."
-            for req in job_requirements[:3] if req.lower() in resume_text.lower()
+        job_summary = await call_xai_api(job_summary_prompt)
+        job_summary = f"Job Requirement Summary:\n{job_summary}"
+
+        # b. Resume Summary with Comparison Table
+        resume_summary_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job summary:\n\n"
+            f"{job_summary}\n\n"
+            "Highlight the user's key skills and experiences, then provide a comparison table based on the resume and job summary. List the key requirements and skills as column Categories, Match status (Strong/Moderate-strong/Partial/Lack), and Comments (very precise comment on how the user experiences matches with the job requirement)."
         )
-        + "\n\nMy background in these areas makes me a strong candidate for this role. I look forward to discussing how I can contribute to your team.\n\n"
-        "Sincerely,\nApplicant"
-    )
-    
-    return {
-        "job_summary": job_summary,
-        "resume_summary": resume_summary,
-        "match_score": round(match_score, 2),
-        "tailored_resume_summary": tailored_resume_summary,
-        "tailored_work_experience": tailored_work_experience,
-        "cover_letter": cover_letter,
-    }
+        resume_summary = await call_xai_api(resume_summary_prompt)
+        resume_summary = f"Resume - Job Posting Comparison:\n\n{resume_summary}"
+
+        # c. Match Score
+        match_score_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job content:\n\n"
+            f"{job_text}\n\n"
+            "Calculate and show a percentage score. The calculation formula is (Count_Match) divided by (Count_Total).\n"
+            "Inside which: Count_Total=sum of (weight_match_total); Count_Match=sum of (weight_match_score).\n"
+            "The mapping between match_type with weight_match_total and weight_match_score are:\n"
+            "Category | match_type | weight_match_score | weight_match_total | Comments\n"
+            "✅ Strong | 1 | 1 | \n"
+            "✅ Moderate-Strong | 0.8 | 1 | \n"
+            "⚠️ Partial | 0.5 | 1 | \n"
+            "Lack | 0 | 1 | \n"
+            "Return only the percentage score as a number rounded to two decimal places."
+        )
+        match_score = float(await call_xai_api(match_score_prompt))
+
+        # d. Tailored Resume Summary
+        tailored_resume_summary_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job content:\n\n"
+            f"{job_text}\n\n"
+            "Provide a brief resume summary to ensure the user experiences are better matched with the job requirements. Keep the overall summary within 1700 characters."
+        )
+        tailored_resume_summary = await call_xai_api(tailored_resume_summary_prompt)
+        tailored_resume_summary = f"Tailored Resume Summary:\n{tailored_resume_summary}"
+
+        # e. Tailored Work Experience
+        tailored_work_experience_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job content:\n\n"
+            f"{job_text}\n\n"
+            "Find the latest work experiences from the resume_text, modify the work experience details according to user experiences to better match with the job requirements. Keep the output work experience in bullet format, and overall within 7 bullets."
+        )
+        tailored_work_experience_text = await call_xai_api(tailored_work_experience_prompt)
+        tailored_work_experience = [line.strip() for line in tailored_work_experience_text.split("\n") if line.strip().startswith("-")]
+        tailored_work_experience = tailored_work_experience[:7]
+        tailored_work_experience = [f"Tailored Resume Work Experience:\n{item}" for item in tailored_work_experience]
+
+        # f. Cover Letter
+        cover_letter_prompt = (
+            "Read the following resume content:\n\n"
+            f"{resume_text}\n\n"
+            "And the following job content:\n\n"
+            f"{job_text}\n\n"
+            "Provide a formal cover letter for applying to the job. The cover letter should highlight the user's best fit skills and experiences according to the job posting, show the user's strengths and passions for the position, and express appreciation for a future interview opportunity."
+        )
+        cover_letter = await call_xai_api(cover_letter_prompt)
+        cover_letter = f"Cover Letter:\n{cover_letter}"
+
+        return {
+            "job_summary": job_summary,
+            "resume_summary": resume_summary,
+            "match_score": match_score,
+            "tailored_resume_summary": tailored_resume_summary,
+            "tailored_work_experience": tailored_work_experience,
+            "cover_letter": cover_letter,
+        }
+    except Exception as e:
+        raise Exception(f"Comparison failed: {str(e)}")
 
 @app.post("/api/compare")
 async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
     try:
-        # Extract resume summary and experience
-        resume_summary_text = ""
-        resume_experience_text = ""
+        resume_text = ""
         if resume.filename.endswith(".pdf"):
-            resume_summary_text, resume_experience_text = extract_text_from_pdf(resume)
+            resume_text = extract_text_from_pdf(resume)
         elif resume.filename.endswith((".doc", ".docx")):
-            resume_summary_text, resume_experience_text = extract_text_from_docx(resume)
+            resume_text = extract_text_from_docx(resume)
         else:
             return JSONResponse(
                 status_code=400,
                 content={"error": "Unsupported file format. Please upload PDF or DOCX."},
             )
-        # Extract job description
         job_text = extract_text_from_url(job_url)
-        # Compare texts and generate outputs
-        result = compare_texts(job_text, resume_summary_text, resume_experience_text)
+        result = await compare_texts(job_text, resume_text)
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(
@@ -245,4 +219,7 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+if __name__ == "__main__":
+    uvicorn.run(app, host="0.0.0.0", port=8000)
 
