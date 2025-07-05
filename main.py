@@ -90,47 +90,48 @@ async def generate_mock_ai_response(prompt: str, system_prompt: str = "You are a
     # 根据提示类型生成相应的模拟响应
     if "job posting" in prompt.lower() and "summarize" in prompt.lower():
         return """
-
-🔧 Skills & Technical Expertise
-Technical program management (Agile, Scrum, Kanban)
-Software development lifecycle & modern architecture principles
-Data-driven program governance and KPI tracking
-Change management and process optimization
-Strong stakeholder engagement and cross-functional communication
-Budget/resource management across engineering initiatives
-
-🎯 Responsibilities
-Drive technical strategy and execution across multi-team engineering initiatives
-Develop and maintain technical roadmaps
-Resolve technical dependencies and risks
-Lead end-to-end program management
-Implement scalable governance frameworks and metrics
-Collaborate across engineering, product, and business functions
-Lead high-priority strategic programs and change management
-
-🎓 Qualifications
-10+ years in technical program management roles
-Bachelor's in Engineering, Computer Science, or related
-PMP certification preferred
-Strong leadership, organizational and communication skills"""
+\n
+🔧 Skills & Technical Expertise\n
+Technical program management (Agile, Scrum, Kanban)\n
+Software development lifecycle & modern architecture principles\n
+Data-driven program governance and KPI tracking\n
+Change management and process optimization\n
+Strong stakeholder engagement and cross-functional communication\n
+Budget/resource management across engineering initiatives\n
+\n
+🎯 Responsibilities\n
+Drive technical strategy and execution across multi-team engineering initiatives\n
+Develop and maintain technical roadmaps\n
+Resolve technical dependencies and risks\n
+Lead end-to-end program management\n
+Implement scalable governance frameworks and metrics\n
+Collaborate across engineering, product, and business functions\n
+Lead high-priority strategic programs and change management\n
+\n
+🎓 Qualifications\n
+10+ years in technical program management roles\n
+Bachelor's in Engineering, Computer Science, or related\n
+PMP certification preferred\n
+Strong leadership, organizational and communication skills\n"""
     
     elif "comparison table" in prompt.lower():
-        return """Resume vs Job Match: Score & Analysis
+        return """
+\n
+| Category | Match Type | Score |
+|----------|------------|-------|
+| Years of Experience | ✅ Strong | 1.0 |
+| Technical Program Mgmt | ✅ Strong | 1.0 |
+| Agile/Scrum/Kanban | ✅ Strong | 1.0 |
+| Software Architecture | ⚠️ Partial | 0.5 |
+| Budget & Resource Mgmt | ⚠️ Partial | 0.5 |
+| Stakeholder Engagement | ✅ Strong | 1.0 |
+| Change Management | ✅ Moderate-Strong | 0.75 |
+| GCP/Cloud & Tech Stack | ✅ Strong | 1.0 |
+| Governance & KPI Tracking | ✅ Strong | 1.0 |
+| PMP Certification | ⚠️ Partial (in progress) | 0.5 |
+| Industry Knowledge (Health) | ❌ Lack | 0.0 |
 
-Category	Match Type	Score
-Years of Experience	✅ Strong	1.0
-Technical Program Mgmt	✅ Strong	1.0
-Agile/Scrum/Kanban	✅ Strong	1.0
-Software Architecture	⚠️ Partial	0.5
-Budget & Resource Mgmt	⚠️ Partial	0.5
-Stakeholder Engagement	✅ Strong	1.0
-Change Management	✅ Moderate-Strong	0.75
-GCP/Cloud & Tech Stack	✅ Strong	1.0
-Governance & KPI Tracking	✅ Strong	1.0
-PMP Certification	⚠️ Partial (in progress)	0.5
-Industry Knowledge (Health)	❌ Lack	0.0
-
-Total: 8.25 / 10"""
+**Total: 8.25 / 10**\n"""
     
     elif "percentage score" in prompt.lower():
         return "88"
