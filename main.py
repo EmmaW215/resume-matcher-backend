@@ -115,15 +115,24 @@ PMP certification preferred
 Strong leadership, organizational and communication skills"""
     
     elif "comparison table" in prompt.lower():
-        return """Resume - Job Posting Comparison:
+        return """Resume vs Job Match: Score & Analysis
 
-| Category | Match Status | Comments |
-|----------|-------------|----------|
-| Python | ✅ Strong | 4 years experience, multiple projects |
-| JavaScript | ✅ Moderate-Strong | 3 years experience, React expertise |
-| AWS | ⚠️ Partial | Basic knowledge, needs more experience |
-| Team Leadership | ✅ Strong | Led 3-person development team |
-| Database Design | ✅ Moderate-Strong | SQL and NoSQL experience"""
+📊 Match Score: 88%
+
+Category	Match Type	Score
+Years of Experience	✅ Strong	1.0
+Technical Program Mgmt	✅ Strong	1.0
+Agile/Scrum/Kanban	✅ Strong	1.0
+Software Architecture	⚠️ Partial	0.5
+Budget & Resource Mgmt	⚠️ Partial	0.5
+Stakeholder Engagement	✅ Strong	1.0
+Change Management	✅ Moderate-Strong	0.75
+GCP/Cloud & Tech Stack	✅ Strong	1.0
+Governance & KPI Tracking	✅ Strong	1.0
+PMP Certification	⚠️ Partial (in progress)	0.5
+Industry Knowledge (Health)	❌ Lack	0.0
+
+Total: 8.25 / 10"""
     
     elif "percentage score" in prompt.lower():
         return "78.5"
