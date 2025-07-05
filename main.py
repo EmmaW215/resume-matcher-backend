@@ -133,10 +133,10 @@ Industry Knowledge (Health)	❌ Lack	0.0
 Total: 8.25 / 10"""
     
     elif "percentage score" in prompt.lower():
-        return "78.5"
+        return "88"
     
     elif "resume summary" in prompt.lower():
-        return """Experienced software developer with 4+ years in full-stack development. 
+        return """Experienced software developer with 14+ years in full-stack development. 
 Strong expertise in Python, JavaScript, and React. Led development teams and delivered 
 multiple successful projects. Excellent problem-solving skills and team collaboration."""
     
