@@ -117,8 +117,6 @@ Strong leadership, organizational and communication skills"""
     elif "comparison table" in prompt.lower():
         return """Resume vs Job Match: Score & Analysis
 
-📊 Match Score: 88%
-
 Category	Match Type	Score
 Years of Experience	✅ Strong	1.0
 Technical Program Mgmt	✅ Strong	1.0
