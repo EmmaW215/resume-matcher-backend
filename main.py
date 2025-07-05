@@ -37,6 +37,34 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+async def call_xai_api(prompt: str, system_prompt: str = "You are a helpful AI assistant specializing in job application analysis.") -> str:
+    api_key = os.getenv("XAI_API_KEY")
+    if not api_key:
+        raise Exception("XAI_API_KEY not set in environment variables")
+    
+    async with aiohttp.ClientSession() as session:
+        headers = {
+            "Authorization": f"Bearer {api_key}",
+            "Content-Type": "application/json"
+        }
+        data = {
+            "model": "grok-3",
+            "messages": [
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": 2000
+        }
+        try:
+            async with session.post("https://api.x.ai/v1/chat/completions", headers=headers, json=data) as response:
+                if response.status != 200:
+                    error_text = await response.text()
+                    raise Exception(f"xAI API error: {response.status} - {error_text}")
+                result = await response.json()
+                return result["choices"][0]["message"]["content"]
+        except aiohttp.ClientError as e:
+            raise Exception(f"xAI API request failed: {str(e)}")
+
 async def call_openai_api(prompt: str, system_prompt: str = "You are a helpful AI assistant specializing in job application analysis.") -> str:
     api_key = os.getenv("OPENAI_API_KEY")
     if not api_key:
@@ -56,6 +84,20 @@ async def call_openai_api(prompt: str, system_prompt: str = "You are a helpful A
         return response.choices[0].message.content.strip()
     except Exception as e:
         raise Exception(f"OpenAI API request failed: {str(e)}")
+
+async def call_ai_api(prompt: str, system_prompt: str = "You are a helpful AI assistant specializing in job application analysis.") -> str:
+    """智能AI服务选择器：优先使用OpenAI，失败时自动切换到xAI"""
+    # 首先尝试OpenAI
+    try:
+        return await call_openai_api(prompt, system_prompt)
+    except Exception as openai_error:
+        # 如果OpenAI失败（配额不足等），尝试xAI
+        try:
+            print(f"OpenAI失败，切换到xAI: {str(openai_error)}")
+            return await call_xai_api(prompt, system_prompt)
+        except Exception as xai_error:
+            # 如果xAI也失败，抛出详细错误
+            raise Exception(f"所有AI服务都失败。OpenAI错误: {str(openai_error)}。xAI错误: {str(xai_error)}")
 
 def extract_text_from_pdf(file: UploadFile) -> str:
     try:
@@ -105,7 +147,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{job_text}\n\n"
             "Summarize the key job requirements from the job descriptions, providing a brief job requirement summary including: Skills & Technical Requirements, Responsibilities, and Qualifications."
         )
-        job_summary = await call_openai_api(job_summary_prompt)
+        job_summary = await call_ai_api(job_summary_prompt)
         job_summary = f"Job Requirement Summary:\n{job_summary}"
 
         # b. Resume Summary with Comparison Table
@@ -116,7 +158,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{job_summary}\n\n"
             "Highlight the user's key skills and experiences, then provide a comparison table based on the resume and job summary. List the key requirements and skills as column Categories, Match status (Strong/Moderate-strong/Partial/Lack), and Comments (very precise comment on how the user experiences matches with the job requirement)."
         )
-        resume_summary = await call_openai_api(resume_summary_prompt)
+        resume_summary = await call_ai_api(resume_summary_prompt)
         resume_summary = f"Resume - Job Posting Comparison:\n\n{resume_summary}"
 
         # c. Match Score
@@ -135,7 +177,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "Lack | 0 | 1 | \n"
             "Return only the percentage score as a number rounded to two decimal places."
         )
-        match_score_str = await call_openai_api(match_score_prompt)
+        match_score_str = await call_ai_api(match_score_prompt)
         try:
             match_score = float(match_score_str.strip().replace("%", ""))
         except Exception:
@@ -149,7 +191,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{job_text}\n\n"
             "Provide a brief resume summary to ensure the user experiences are better matched with the job requirements. Keep the overall summary within 1700 characters."
         )
-        tailored_resume_summary = await call_openai_api(tailored_resume_summary_prompt)
+        tailored_resume_summary = await call_ai_api(tailored_resume_summary_prompt)
         tailored_resume_summary = f"Tailored Resume Summary:\n{tailored_resume_summary}"
 
         # e. Tailored Work Experience
@@ -160,7 +202,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{job_text}\n\n"
             "Find the latest work experiences from the resume_text, modify the work experience details according to user experiences to better match with the job requirements. Keep the output work experience in bullet format, and overall within 7 bullets."
         )
-        tailored_work_experience_text = await call_openai_api(tailored_work_experience_prompt)
+        tailored_work_experience_text = await call_ai_api(tailored_work_experience_prompt)
         tailored_work_experience = [line.strip() for line in tailored_work_experience_text.split("\n") if line.strip().startswith("-")]
         tailored_work_experience = tailored_work_experience[:7]
         tailored_work_experience = [f"Tailored Resume Work Experience:\n{item}" for item in tailored_work_experience]
@@ -173,7 +215,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{job_text}\n\n"
             "Provide a formal cover letter for applying to the job. The cover letter should highlight the user's best fit skills and experiences according to the job posting, show the user's strengths and passions for the position, and express appreciation for a future interview opportunity."
         )
-        cover_letter = await call_openai_api(cover_letter_prompt)
+        cover_letter = await call_ai_api(cover_letter_prompt)
         cover_letter = f"Cover Letter:\n{cover_letter}"
 
         return {
