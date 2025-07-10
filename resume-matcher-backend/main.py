@@ -85,7 +85,7 @@ async def call_openai_api(prompt: str, system_prompt: str = "You are a helpful A
             max_tokens=2000,
             temperature=0.3
         )
-        return response.choices[0].message.content.strip()
+        return response.choices[0].message.content.strip() if response.choices[0].message.content else ""
     except Exception as e:
         raise Exception(f"OpenAI API request failed: {str(e)}")
 
@@ -313,9 +313,9 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
 async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
     try:
         resume_text = ""
-        if resume.filename.endswith(".pdf"):
+        if resume.filename and resume.filename.endswith(".pdf"):
             resume_text = extract_text_from_pdf(resume)
-        elif resume.filename.endswith((".doc", ".docx")):
+        elif resume.filename and resume.filename.endswith((".doc", ".docx")):
             resume_text = extract_text_from_docx(resume)
         else:
             return JSONResponse(
