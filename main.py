@@ -311,7 +311,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
         raise Exception(f"Comparison failed: {str(e)}")
 
 @app.post("/api/compare")
-async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
+async def compare(job_text: str = Form(...), resume: UploadFile = File(...)):
     try:
         resume_text = ""
         if resume.filename and resume.filename.endswith(".pdf"):
@@ -323,7 +323,7 @@ async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
                 status_code=400,
                 content={"error": "Unsupported file format. Please upload PDF or DOCX."},
             )
-        job_text = extract_text_from_url(job_url)
+        # 直接用 job_text，不再 extract_text_from_url
         result = await compare_texts(job_text, resume_text)
         return JSONResponse(content=result)
     except Exception as e:
