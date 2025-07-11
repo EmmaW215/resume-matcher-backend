@@ -12,6 +12,7 @@ import json
 import os
 import openai
 
+
 app = FastAPI()
 
 # CORS configuration - support multiple domains
@@ -237,7 +238,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
         job_summary_prompt = (
             "Please read the following job posting content:\n\n"
             f"{job_text}\n\n"
-            "Summarize the key job requirements from the job descriptions in the job_text, providing a brief job requirement summary including: Skills & Technical Requirements, Responsibilities, and Qualifications. Output the contents as job_summary."
+            "Summarize the key job requirements from the job descriptions in the job_text, providing a brief job requirement summary including: Skills & Technical Requirements, Responsibilities, and Qualifications. Use the bullet format for the output of the contents as job summary."
         )
         job_summary = await call_ai_api(job_summary_prompt)
         job_summary = f"Key Requirements from this Job Posting:\n\n{job_summary}"
@@ -248,14 +249,14 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job summary:\n\n"
             f"{job_summary}\n\n"
-            "Provide a comparison table based on the highlights of the user's key skills and experiences in the resume_text (the user's resume) and job_summary. List in a table format with three columns: Categories (key requirements and skills), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only Output the table contents in a table format as resume_summary."
+            "Output a Markdown table, which is a comparison table provided basing on the highlights of the user's key skills and experiences in the resume_text (the user's resume) and job_summary. List in a table format with three columns: Categories (key requirements and skills), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only output the Markdown table, nothing else. The table must use | separators and a header row. Do not add any explanation or extra text."
         )
         resume_summary = await call_ai_api(resume_summary_prompt)
         resume_summary = f"\n\n{resume_summary}"
 
         # c. Match Score
         match_score_prompt = (
-            "Based on the comparison table in resume_summary, and the listed Match status (Strong/Moderate-strong/Partial/Lack), calculate and show a percentage match score. The score is calculated using the formula: Match Score (%) = (Sum of weight_match_score) ÷ (Sum of weight_match_total). For each Category and its Match Status, use the assigned weights as follows: Strong match → weight_match_score = 1, weight_match_total = 1; Moderate-Strong match → weight_match_score = 0.8, weight_match_total = 1; Partial match → weight_match_score = 0.5, weight_match_total = 1; Lack → weight_match_score = 0, weight_match_total = 1. Only output the final percentage score, rounded to two decimal places."
+            "Output a calculated percentage number as the match score. the calculation based on the comparison table in resume_summary, and the listed Match status (Strong/Moderate-strong/Partial/Lack), calculate and show a percentage match score. The score is calculated using the formula: Match Score (%) = (Sum of weight_match_score) ÷ (Sum of weight_match_total). For each Category and its Match Status, use the assigned weights as follows: Strong match → weight_match_score = 1, weight_match_total = 1; Moderate-Strong match → weight_match_score = 0.8, weight_match_total = 1; Partial match → weight_match_score = 0.5, weight_match_total = 1; Lack → weight_match_score = 0, weight_match_total = 1. Output only the calculated percentage number, no explanation, no symbols, no text."
         )
         match_score_str = await call_ai_api(match_score_prompt)
         try:
