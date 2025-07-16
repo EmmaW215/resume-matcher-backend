@@ -1,0 +1,83 @@
+Xu (Emma) Wang 
+• popoxu215@hotmail.com  • 4164078480  • Mississauga, ON, Canada  • linkedin.com/in/emma-wang-92356614
+SUMMARY 
+Strategic and results-driven Technical Program Manager with over 12 years of experience leading complex, cross-
+functional initiatives at Bell Mobility. Proven track record of driving cloud-native 
+modernization programs, automating 
+technical workflows, and executing large-scale projects 
+across Agile, Scrum, and Waterfall methodologies. Skilled in 
+bridging business needs with technical delivery, managing 
+multi-vendor RFPs, budgets, and governance frameworks 
+to achieve measurable results. Led the GCP-based transformation of Bell’s RF design platform, and enhancing 
+network planning efficiency. Adept at stakeholder engagement, cross-functional alignment, and change management 
+to deliver high-impact, scalable solutions. Experienced in building KPI-driven governance structures, optimizing team 
+velocity, and driving process improvement across multiple workstreams. Recognized for translating strategy into 
+execution while ensuring regulatory compliance, operational excellence, and exceptional customer outcomes. 
+Certificated Agile Product Owner, Scrum Master, PMP certification is in progress. Passionate about enabling digital 
+innovation in fast-paced and mission-driven environments.
+EXPERIENCE 
+Bell Mobility, Senior Technical Architecture at RAN Design Standards 
+Jan 2020 - Present 
+•Enterprise-Scale System Modernization: Led the transformation of Bell’s RF design platform into a cloud-native,
+GCP-hosted solution. Delivered seamless data integration, platform migration, and system optimization—resultingin a 34% improvement in network design accuracy and operational efficiency.
+•Product Delivery & Agile Leadership: Directed end-to-end technical delivery for national infrastructure projectsusing both Agile and Waterfall methodologies. Spearhead in data integration and ETL process, implementstandards and improve data accuracy and data qualifications, Oversaw multiple concurrent initiatives through allphases of the project lifecycle, ensuring alignment with timelines, budgets, KPIs, and quality benchmarks.Spearheaded Agile product development of RF tools and technical architectural standards for Radio AccessNetworks (RAN), including backlog grooming, sprint planning, and cross-functional stakeholder management. Ledproduct teams in delivering scalable and reliable network design solutions aligned with strategic business goals.
+•Process Automation & Innovation: Championed automation initiatives including the development of digital twinsfor 5G RAN throughput simulation, Develop GIS automation tool by using Open data, Introduced AI/ML-enhanceddata modelling tools by using crowd source data, to reduce manual effort and accelerate planning workflows, andsupport predictive analysis across network operations.
+•RFP & Vendor Management: Managed complex multi-vendor RFP processes—defining business cases,evaluation frameworks, and compliance requirements. Conducted demo coordination, scoring, and contractnegotiations while ensuring alignment with Bell’s procurement standards and audit readiness.
+•Cross-Functional Collaboration: Coordinated deliverables across engineering, planning, operations, and cloudgovernance teams to execute system integration, platform migration, and solution deployments within aggressivetimeframes. Championed collaborative culture to resolve dependencies and mitigate risks proactively.
+•Governance & Reporting: Developed and maintained PMO-style dashboards, risk registers, and reporting toolsto provide executive-level visibility into project milestones, resource usage, and operational risks. Promotedtransparency through standardized workflows and documentation.
+•Regulatory Compliance: Ensured ongoing compliance with ISED and internal regulatory requirements throughstructured documentation, QA reviews, and the implementation of scalable design processes.
+•Data Analytics & Visualization: Conducted performance and root cause analysis using Alteryx, Excel, andinternal tools to support business decision-making and operational improvements. Led the creation of dashboardsand automated reports to enhance stakeholder insight and efficiency.
+•Strategic problem solving, led the root cause analysis on performance and customer complain issues,successful identified the root causes and provided solutions, led to successful  project rollout.
+•Certifications: Scrum Master, Product Owner (Scrum.org), SAFe for Teams; PMP in progress.
+•Tools & Methodologies:  Microsoft Project, SharePoint, Jira, Confluence, Miro, Alteryx, Python, Raster API
+Bell Mobility, RF Specialist at RF Design & Performance 
+Jun 2011 - Dec 2019 
+•Technical project management on end-to-end process of RAN network designs, implementation and execution,
+collaborating with cross-function teams to successfully implement RAN station infrastructure, enhancing overall
+RAN system performance, achieving substantial improvements in signal coverage and quality across multiple
+regions, directly contributing to increased customer satisfaction.
+•Evaluated network 
+performance metrics and conducted rigorous analyses to identify areas for enhancement,
+revamping existing processes for network performance evaluations, decreasing assessment time by 25%.
+• As senior RF design specialist, trained junior engineers on technical standards and best practicesSKILLS 
+• Data Platform Integration & ETL process • Project Lifecycle Management (Agile & Waterfall)
+• GCP Cloud Solution. • Tool & Process Automation
+• System Architecture & Technical Strategy • Stakeholder Collaboration• Request for Proposal (RFP) • Cross-Functional Leadership
+• Regulatory Compliance • Vendor & Procurement Management (RFP, SOW, SLA)
+• PMP Certification Prep • Salesforce Administrator Cert Prep
+HONOURS & AWARDS 
+Bell Excellence and Innovation Award  
+Bell • Jan 2024  
+Improved WHI qualification accuracy in Atlantic Canada by operationalizing precise prediction models 
+Bell Merit Gold Award  
+Bell • Jan 2023  
+Wireless Point-to-Point Predictive Analysis Automation (Merit Gold Award) 
+LICENSES & CERTIFICATIONS 
+SAFe for Teams (6.0)  
+Scaled Agile (SAFe®) Training by Agile Certification Academy • 22131852-1805 • Issued May 2023 
+Professional Scrum Product Owner (PSPO I) 
+Scrum.org • 772515 • Issued Mar 2022  
+Professional Scrum Master (PSM I)  
+Scrum.org • 593269 • Issued Nov 2020 
+Google Cloud Foundations (GCP) 
+LinkedIn • Issued Dec 2022  
+Generative AI for Product Managers 
+LinkedIn • Issued May 2025  
+Project Management Foundations 
+LinkedIn • Issued Jun 2025  
+SAP ERP Essential  
+LinkedIn • Issued May 2025 
+LANGUAGES 
+• English • Chinese
+EDUCATION 
+Xi'an Jiaotong University  
+Master's Degree • Telecommunications Engineering • Sep 2000 - Jun 2003 
+Xi'an University of Technology  
+Bachelor's Degree • Engineering • Sep 1996 - Jun 2000 
+REFERENCE 
+Mingming Wei  
+Senior Manager of Wireless Technology, Bell Mobility 
+mingming.wei@bell.ca   4169701938  
+Samuel Domingues  
+Senior Manager - Wireless Network Product Management - Automation and Analytics, Bell Mobility 
+samuel.domingues@bell.ca  416-575-0462
