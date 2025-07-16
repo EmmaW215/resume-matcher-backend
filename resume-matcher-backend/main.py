@@ -12,6 +12,7 @@ import json
 import os
 import openai
 
+print(">>> THIS IS THE MAIN.PY BEING USED <<<")
 
 app = FastAPI()
 
@@ -91,91 +92,71 @@ async def call_openai_api(prompt: str, system_prompt: str = "You are a helpful A
         raise Exception(f"OpenAI API request failed: {str(e)}")
 
 async def generate_mock_ai_response(prompt: str, system_prompt: str = "You are a helpful AI assistant specializing in job application analysis.") -> str:
-    """本地模拟AI响应，作为最后的备用方案"""
-    # 根据提示类型生成相应的模拟响应
     if "job posting" in prompt.lower() and "summarize" in prompt.lower():
         return """
-
-\n\n
-🔧 Skills & Technical Expertise:\n\n
-- Technical program management (Agile, Scrum, Kanban)\n\n
-- Software development lifecycle & modern architecture principles\n\n
-- Data-driven program governance and KPI tracking\n\n
-- Change management and process optimization\n\n
-- Strong stakeholder engagement and cross-functional communication\n\n
-- Budget/resource management across engineering initiatives\n\n
-
-\n\n
-🎯 Responsibilities:\n\n
-- Drive technical strategy and execution across multi-team engineering initiatives\n\n
-- Develop and maintain technical roadmaps\n\n
-- Resolve technical dependencies and risks\n\n
-- Lead end-to-end program management\n\n
-- Implement scalable governance frameworks and metrics\n\n
-- Collaborate across engineering, product, and business functions\n\n
-- Lead high-priority strategic programs and change management\n\n
-
-
-🎓 Qualifications:\n\n
-- 10+ years in technical program management roles\n\n
-- Bachelor's in Engineering, Computer Science, or related\n\n
-- PMP certification preferred\n\n
-- Strong leadership, organizational and communication skills\n\n"""
-    
+<p><b>Skills & Technical Expertise:</b></p>
+<ul>
+<li>Technical program management (Agile, Scrum, Kanban)</li>
+<li>Software development lifecycle & modern architecture principles</li>
+<li>Data-driven program governance and KPI tracking</li>
+<li>Change management and process optimization</li>
+<li>Strong stakeholder engagement and cross-functional communication</li>
+<li>Budget/resource management across engineering initiatives</li>
+</ul>
+<p><b>Responsibilities:</b></p>
+<ul>
+<li>Drive technical strategy and execution across multi-team engineering initiatives</li>
+<li>Develop and maintain technical roadmaps</li>
+<li>Resolve technical dependencies and risks</li>
+<li>Lead end-to-end program management</li>
+<li>Implement scalable governance frameworks and metrics</li>
+<li>Collaborate across engineering, product, and business functions</li>
+<li>Lead high-priority strategic programs and change management</li>
+</ul>
+<p><b>Qualifications:</b></p>
+<ul>
+<li>10+ years in technical program management roles</li>
+<li>Bachelor's in Engineering, Computer Science, or related</li>
+<li>PMP certification preferred</li>
+<li>Strong leadership, organizational and communication skills</li>
+</ul>
+"""
     elif "comparison table" in prompt.lower():
         return """
-\n\n
-| Category | Match Type | Score |\n\n
-|----------|------------|-------|\n\n
-| Years of Experience | ✅ Strong | 1.0 |\n\n
-| Technical Program Mgmt | ✅ Strong | 1.0 |\n\n
-| Agile/Scrum/Kanban | ✅ Strong | 1.0 |\n\n
-| Software Architecture | ⚠️ Partial | 0.5 |\n\n
-| Budget & Resource Mgmt | ⚠️ Partial | 0.5 |\n\n
-| Stakeholder Engagement | ✅ Strong | 1.0 |\n\n
-| Change Management | ✅ Moderate-Strong | 0.75 |\n\n
-| GCP/Cloud & Tech Stack | ✅ Strong | 1.0 |\n\n
-| Governance & KPI Tracking | ✅ Strong | 1.0 |\n\n
-| PMP Certification | ⚠️ Partial (in progress) | 0.5 |\n\n
-| Industry Knowledge (Health) | ❌ Lack | 0.0 |\n\n
-\n\n
-**Total: 8.25 / 10**\n\n"""
-    
+<table><tr><th>Category</th><th>Match Type</th><th>Score</th></tr>
+<tr><td>Years of Experience</td><td>✅ Strong</td><td>1.0</td></tr>
+<tr><td>Technical Program Mgmt</td><td>✅ Strong</td><td>1.0</td></tr>
+<tr><td>Agile/Scrum/Kanban</td><td>✅ Strong</td><td>1.0</td></tr>
+<tr><td>Software Architecture</td><td>⚠️ Partial</td><td>0.5</td></tr>
+<tr><td>Budget & Resource Mgmt</td><td>⚠️ Partial</td><td>0.5</td></tr>
+<tr><td>Stakeholder Engagement</td><td>✅ Strong</td><td>1.0</td></tr>
+<tr><td>Change Management</td><td>✅ Moderate-Strong</td><td>0.75</td></tr>
+<tr><td>GCP/Cloud & Tech Stack</td><td>✅ Strong</td><td>1.0</td></tr>
+<tr><td>Governance & KPI Tracking</td><td>✅ Strong</td><td>1.0</td></tr>
+<tr><td>PMP Certification</td><td>⚠️ Partial (in progress)</td><td>0.5</td></tr>
+<tr><td>Industry Knowledge (Health)</td><td>❌ Lack</td><td>0.0</td></tr>
+</table>
+"""
     elif "percentage score" in prompt.lower():
         return "88"
-    
     elif "resume summary" in prompt.lower():
-        return """Experienced software developer with 14+ years in full-stack development. 
-Strong expertise in Python, JavaScript, and React. Led development teams and delivered 
-multiple successful projects. Excellent problem-solving skills and team collaboration."""
-    
+        return """<p>Experienced software developer with 14+ years in full-stack development.<br>Strong expertise in Python, JavaScript, and React. Led development teams and delivered multiple successful projects. Excellent problem-solving skills and team collaboration.</p>"""
     elif "work experience" in prompt.lower():
-        return """- Led development of e-commerce platform using React and Node.js
-- Implemented RESTful APIs and microservices architecture
-- Managed team of 3 developers and delivered projects on time
-- Optimized database queries improving performance by 40%
-- Integrated third-party payment systems and analytics tools"""
-    
+        return """<ul>
+<li>Led development of e-commerce platform using React and Node.js</li>
+<li>Implemented RESTful APIs and microservices architecture</li>
+<li>Managed team of 3 developers and delivered projects on time</li>
+<li>Optimized database queries improving performance by 40%</li>
+<li>Integrated third-party payment systems and analytics tools</li>
+</ul>"""
     elif "cover letter" in prompt.lower():
-        return """Dear Hiring Manager,
-
-I am excited to apply for the Software Developer position. With 14+ years of experience 
-in full-stack development using Python, JavaScript, and React, I believe I am an 
-excellent fit for your team.
-
-My experience leading development teams and delivering complex projects aligns 
-perfectly with your requirements. I am passionate about creating efficient, 
-scalable solutions and would welcome the opportunity to contribute to your 
-organization's success.
-
-Thank you for considering my application. I look forward to discussing how my 
-skills and experience can benefit your team.
-
-Best regards,
-[Your Name]"""
-    
+        return """<p>Dear Hiring Manager,</p>
+<p>I am excited to apply for the Software Developer position. With 14+ years of experience in full-stack development using Python, JavaScript, and React, I believe I am an excellent fit for your team.</p>
+<p>My experience leading development teams and delivering complex projects aligns perfectly with your requirements. I am passionate about creating efficient, scalable solutions and would welcome the opportunity to contribute to your organization's success.</p>
+<p>Thank you for considering my application. I look forward to discussing how my skills and experience can benefit your team.</p>
+<p>Best regards,<br>[Your Name]</p>"""
     else:
-        return "AI analysis completed successfully. Please review the generated content."
+        return "<p>AI analysis completed successfully. Please review the generated content.</p>"
 
 async def call_ai_api(prompt: str, system_prompt: str = "You are a helpful AI assistant specializing in job application analysis.") -> str:
     """智能AI服务选择器：优先使用OpenAI，失败时自动切换到xAI，最后使用本地模拟"""
@@ -238,10 +219,10 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
         job_summary_prompt = (
             "Please read the following job posting content:\n\n"
             f"{job_text}\n\n"
-            "Summarize the key job requirements from the job descriptions in the job_text, providing a brief job requirement summary including: Skills & Technical Requirements, Responsibilities, and Qualifications. Use the bullet format for the output of the contents as job summary."
+            "Summarize the key job requirements from the job descriptions in the job_text, providing a brief job requirement summary including three parts: Skills & Technical Requirements, Responsibilities, and Qualifications. Use the bullet format for the output of the contents as job summary. Make sure there is a forced line break at the end of each paragraph. Only output in HTML format, with <table>, <tr>, <th>, <td> tags. it should be styled to look clean and modern."
         )
         job_summary = await call_ai_api(job_summary_prompt)
-        job_summary = f"Key Requirements from this Job Posting:\n\n{job_summary}"
+        job_summary = f"Key Requirements from this Job Posting:\n\n {job_summary}"
 
         # b. Resume Summary with Comparison Table
         resume_summary_prompt = (
@@ -249,14 +230,15 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job summary:\n\n"
             f"{job_summary}\n\n"
-            "Output a Markdown table, which is a comparison table provided basing on the highlights of the user's key skills and experiences in the resume_text (the user's resume) and job_summary. List in a table format with three columns: Categories (key requirements and skills), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only output the Markdown table, nothing else. The table must use | separators and a header row. Do not add any explanation or extra text."
+            "Output a comparison table based on the highlights of the user's key skills and experiences in the resume_text (the user's resume) and job_summary. Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern. List in the table format with three columns: Categories (key requirements and skills), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern."
         )
         resume_summary = await call_ai_api(resume_summary_prompt)
+        print("resume_summary raw output:", resume_summary)
         resume_summary = f"\n\n{resume_summary}"
 
         # c. Match Score
         match_score_prompt = (
-            "Output a calculated percentage number as the match score. the calculation based on the comparison table in resume_summary, and the listed Match status (Strong/Moderate-strong/Partial/Lack), calculate and show a percentage match score. The score is calculated using the formula: Match Score (%) = (Sum of weight_match_score) ÷ (Sum of weight_match_total). For each Category and its Match Status, use the assigned weights as follows: Strong match → weight_match_score = 1, weight_match_total = 1; Moderate-Strong match → weight_match_score = 0.8, weight_match_total = 1; Partial match → weight_match_score = 0.5, weight_match_total = 1; Lack → weight_match_score = 0, weight_match_total = 1. Output only the calculated percentage number, no explanation, no symbols, no text."
+            "Output a calculated percentage number as the match score. the calculation for the output is based on the comparison table in resume_summary, and the listed Match status (Strong/Moderate-strong/Partial/Lack), calculate and show a percentage match score. The score is calculated using the formula: Match Score (%) = (Sum of weight_match_score) ÷ (Sum of weight_match_total). For each Category and its Match Status, use the assigned weights as follows: Strong match → weight_match_score = 1, weight_match_total = 1; Moderate-Strong match → weight_match_score = 0.8, weight_match_total = 1; Partial match → weight_match_score = 0.5, weight_match_total = 1; Lack → weight_match_score = 0, weight_match_total = 1. Output only the calculated percentage number, no explanation, no symbols, no text."
         )
         match_score_str = await call_ai_api(match_score_prompt)
         try:
@@ -284,9 +266,10 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "Find the latest work experiences from the resume_text (the user's resume), modify and revise the user work experience details to better match with the job requirements in the job_text. Keep the revised output in bullet format, and overall within 7 bullets."
         )
         tailored_work_experience_text = await call_ai_api(tailored_work_experience_prompt)
-        tailored_work_experience = [line.strip() for line in tailored_work_experience_text.split("\n") if line.strip().startswith("-")]
-        tailored_work_experience = tailored_work_experience[:7]
-        tailored_work_experience = [f"\n{item}" for item in tailored_work_experience]
+        tailored_work_experience_lines = [line.strip() for line in tailored_work_experience_text.split("\n") if line.strip().startswith("-")]
+        tailored_work_experience_lines = tailored_work_experience_lines[:7]
+        # 转为 HTML 无序列表字符串
+        tailored_work_experience_html = "<ul>" + "".join([f"<li>{item.lstrip('-').strip()}</li>" for item in tailored_work_experience_lines]) + "</ul>"
 
         # f. Cover Letter
         cover_letter_prompt = (
@@ -294,7 +277,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job content:\n\n"
             f"{job_text}\n\n"
-            "Provide a formal cover letter for applying to the job applying. The job position and the company name in the cover letter for applying should be the same as what being used in the job_text. The cover letter should show the user's key strengths and highlight the user's best fit skills and experiences according to the job posting in job_text, then express the user's passions for the position, and express appreciation for a future interview opportunity. The overall tone of the cover letter should be confident, honest, and professional. The cover letters should be written in the first person."
+            "Provide a formal cover letter for applying to the job applying. The job position and the company name in the cover letter for applying should be the same as what being used in the job_text. The cover letter should show the user's key strengths and highlight the user's best fit skills and experiences according to the job posting in job_text, then express the user's passions for the position, and express appreciation for a future interview opportunity. The overall tone of the cover letter should be confident, honest, and professional. The cover letters should be written in the first person. Only output in HTML format, using <p> and <br> tags for formatting. Do not output markdown or plain text."
         )
         cover_letter = await call_ai_api(cover_letter_prompt)
         cover_letter = f"\n{cover_letter}"
@@ -304,14 +287,14 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "resume_summary": resume_summary,
             "match_score": match_score,
             "tailored_resume_summary": tailored_resume_summary,
-            "tailored_work_experience": tailored_work_experience,
+            "tailored_work_experience": tailored_work_experience_html,
             "cover_letter": cover_letter,
         }
     except Exception as e:
         raise Exception(f"Comparison failed: {str(e)}")
 
 @app.post("/api/compare")
-async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
+async def compare(job_text: str = Form(...), resume: UploadFile = File(...)):
     try:
         resume_text = ""
         if resume.filename and resume.filename.endswith(".pdf"):
@@ -323,7 +306,7 @@ async def compare(job_url: str = Form(...), resume: UploadFile = File(...)):
                 status_code=400,
                 content={"error": "Unsupported file format. Please upload PDF or DOCX."},
             )
-        job_text = extract_text_from_url(job_url)
+        # 直接用 job_text，不再 extract_text_from_url
         result = await compare_texts(job_text, resume_text)
         return JSONResponse(content=result)
     except Exception as e:
