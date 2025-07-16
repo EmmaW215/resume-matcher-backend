@@ -266,9 +266,10 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "Find the latest work experiences from the resume_text (the user's resume), modify and revise the user work experience details to better match with the job requirements in the job_text. Keep the revised output in bullet format, and overall within 7 bullets."
         )
         tailored_work_experience_text = await call_ai_api(tailored_work_experience_prompt)
-        tailored_work_experience = [line.strip() for line in tailored_work_experience_text.split("\n") if line.strip().startswith("-")]
-        tailored_work_experience = tailored_work_experience[:7]
-        tailored_work_experience = [f"\n{item}" for item in tailored_work_experience]
+        tailored_work_experience_lines = [line.strip() for line in tailored_work_experience_text.split("\n") if line.strip().startswith("-")]
+        tailored_work_experience_lines = tailored_work_experience_lines[:7]
+        # 转为 HTML 无序列表字符串
+        tailored_work_experience_html = "<ul>" + "".join([f"<li>{item.lstrip('-').strip()}</li>" for item in tailored_work_experience_lines]) + "</ul>"
 
         # f. Cover Letter
         cover_letter_prompt = (
@@ -276,7 +277,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job content:\n\n"
             f"{job_text}\n\n"
-            "Provide a formal cover letter for applying to the job applying. The job position and the company name in the cover letter for applying should be the same as what being used in the job_text. The cover letter should show the user's key strengths and highlight the user's best fit skills and experiences according to the job posting in job_text, then express the user's passions for the position, and express appreciation for a future interview opportunity. The overall tone of the cover letter should be confident, honest, and professional. The cover letters should be written in the first person."
+            "Provide a formal cover letter for applying to the job applying. The job position and the company name in the cover letter for applying should be the same as what being used in the job_text. The cover letter should show the user's key strengths and highlight the user's best fit skills and experiences according to the job posting in job_text, then express the user's passions for the position, and express appreciation for a future interview opportunity. The overall tone of the cover letter should be confident, honest, and professional. The cover letters should be written in the first person. Only output in HTML format, using <p> and <br> tags for formatting. Do not output markdown or plain text."
         )
         cover_letter = await call_ai_api(cover_letter_prompt)
         cover_letter = f"\n{cover_letter}"
@@ -286,7 +287,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "resume_summary": resume_summary,
             "match_score": match_score,
             "tailored_resume_summary": tailored_resume_summary,
-            "tailored_work_experience": tailored_work_experience,
+            "tailored_work_experience": tailored_work_experience_html,
             "cover_letter": cover_letter,
         }
     except Exception as e:
