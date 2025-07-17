@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form
+from fastapi import FastAPI, UploadFile, File, Form, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -12,9 +12,36 @@ import json
 import os
 import openai
 
-print(">>> THIS IS THE MAIN.PY BEING USED <<<")
 
-app = FastAPI()
+
+from firebase_admin import firestore
+from firebase_admin_init import db
+
+app = FastAPI()  # 必须在最前面
+
+# 查询用户试用状态
+@app.get("/api/user/trial-status")
+async def get_trial_status(uid: str = Query(...)):
+    try:
+        doc_ref = db.collection("users").document(uid)
+        doc = doc_ref.get()
+        if doc.exists:
+            data = doc.to_dict()
+            return {"trialUsed": data.get("trialUsed", False)}
+        else:
+            return {"trialUsed": False}
+    except Exception as e:
+        return {"error": str(e)}
+
+# 标记用户已使用试用
+@app.post("/api/user/use-trial")
+async def use_trial(uid: str = Query(...)):
+    try:
+        doc_ref = db.collection("users").document(uid)
+        doc_ref.set({"trialUsed": True}, merge=True)
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
 
 # CORS configuration - support multiple domains
 allowed_origins = [
@@ -314,6 +341,28 @@ async def compare(job_text: str = Form(...), resume: UploadFile = File(...)):
             status_code=500,
             content={"error": f"Processing error: {str(e)}"},
         )
+
+import stripe
+
+stripe.api_key = "你的STRIPE_SECRET_KEY"
+
+@app.post("/api/create-checkout-session")
+async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...)):
+    try:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[{
+                "price": price_id,
+                "quantity": 1,
+            }],
+            mode="payment",  # 或 "subscription" 对于订阅
+            success_url="http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url="http://localhost:3000/cancel",
+            metadata={"uid": uid}
+        )
+        return {"checkout_url": session.url}
+    except Exception as e:
+        return {"error": str(e)}
 
 @app.get("/")
 def root():
