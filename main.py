@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Form, Query
+from fastapi import FastAPI, UploadFile, File, Form, Query, Request
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
@@ -385,6 +385,28 @@ async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...
         return {"checkout_url": session.url}
     except Exception as e:
         return {"error": str(e)}
+
+@app.post("/api/stripe-webhook")
+async def stripe_webhook(request: Request):
+    payload = await request.body()
+    sig_header = request.headers.get("stripe-signature")
+    event = None
+    try:
+        event = stripe.Webhook.construct_event(
+            payload, sig_header, STRIPE_WEBHOOK_SECRET
+        )
+    except Exception as e:
+        print("⚠️  Webhook signature verification failed.", e)
+        return {"status": "error", "message": str(e)}
+
+    # 只处理 checkout.session.completed 事件
+    if event["type"] == "checkout.session.completed":
+        session = event["data"]["object"]
+        uid = session["metadata"].get("uid")
+        print(f"✅ Payment completed for user: {uid}")
+        # TODO: 在这里更新 Firestore 或数据库，设置用户为已升级
+        # 例如：update_user_membership(uid, True)
+    return {"status": "success"}
 
 @app.get("/")
 def root():
