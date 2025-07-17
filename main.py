@@ -12,7 +12,12 @@ import json
 import os
 import openai
 
+import stripe
 
+from dotenv import load_dotenv
+load_dotenv()
+import os
+stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
 from firebase_admin import firestore
 from firebase_admin_init import db
@@ -342,13 +347,15 @@ async def compare(job_text: str = Form(...), resume: UploadFile = File(...)):
             content={"error": f"Processing error: {str(e)}"},
         )
 
-import stripe
 
-stripe.api_key = "REMOVED_STRIPE_SECRET "
 
 @app.post("/api/create-checkout-session")
 async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...), mode: str = Form(...)):
     try:
+        print("stripe.api_key:", stripe.api_key)
+        print("uid:", uid)
+        print("price_id:", price_id)
+        print("mode:", mode)
         if mode == "payment":
             session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
