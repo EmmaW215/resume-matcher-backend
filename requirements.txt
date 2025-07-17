@@ -9,3 +9,4 @@ PyPDF2
 aiohttp
 beautifulsoup4
 requests
+stripe

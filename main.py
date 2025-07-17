@@ -344,22 +344,37 @@ async def compare(job_text: str = Form(...), resume: UploadFile = File(...)):
 
 import stripe
 
-stripe.api_key = "你的STRIPE_SECRET_KEY"
+stripe.api_key = "REMOVED_STRIPE_SECRET "
 
 @app.post("/api/create-checkout-session")
-async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...)):
+async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...), mode: str = Form(...)):
     try:
-        session = stripe.checkout.Session.create(
-            payment_method_types=["card"],
-            line_items=[{
-                "price": price_id,
-                "quantity": 1,
-            }],
-            mode="payment",  # 或 "subscription" 对于订阅
-            success_url="http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}",
-            cancel_url="http://localhost:3000/cancel",
-            metadata={"uid": uid}
-        )
+        if mode == "payment":
+            session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=[{
+                    "price": price_id,
+                    "quantity": 1,
+                }],
+                mode="payment",
+                success_url="http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url="http://localhost:3000/cancel",
+                metadata={"uid": uid}
+            )
+        elif mode == "subscription":
+            session = stripe.checkout.Session.create(
+                payment_method_types=["card"],
+                line_items=[{
+                    "price": price_id,  # 只要是同一产品下的订阅 price_id，Stripe 页面会自动显示所有订阅套餐
+                    "quantity": 1,
+                }],
+                mode="subscription",
+                success_url="http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}",
+                cancel_url="http://localhost:3000/cancel",
+                metadata={"uid": uid}
+            )
+        else:
+            return {"error": "Invalid mode"}
         return {"checkout_url": session.url}
     except Exception as e:
         return {"error": str(e)}
