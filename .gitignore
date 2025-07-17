@@ -2,3 +2,6 @@
 venv/
 
 serviceAccountKey.json
+
+.env
+replacements.txt
