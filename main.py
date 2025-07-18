@@ -20,12 +20,12 @@ import os
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
 import firebase_admin
-from firebase_admin import credentials
+from firebase_admin import credentials, firestore
+
+STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 
 cred = credentials.Certificate("serviceAccountKey.json")
 firebase_admin.initialize_app(cred)
-
-from firebase_admin import firestore
 
 db = firestore.client()
 # 例如：db.collection("users").document(uid).set({...})
@@ -394,6 +394,11 @@ async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...
     except Exception as e:
         return {"error": str(e)}
 
+def update_user_membership(uid, is_upgraded):
+    db = firestore.client()
+    user_ref = db.collection("users").document(uid)
+    user_ref.set({"isUpgraded": is_upgraded}, merge=True)
+
 @app.post("/api/stripe-webhook")
 async def stripe_webhook(request: Request):
     payload = await request.body()
@@ -407,13 +412,12 @@ async def stripe_webhook(request: Request):
         print("⚠️  Webhook signature verification failed.", e)
         return {"status": "error", "message": str(e)}
 
-    # 只处理 checkout.session.completed 事件
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         uid = session["metadata"].get("uid")
         print(f"✅ Payment completed for user: {uid}")
-        # TODO: 在这里更新 Firestore 或数据库，设置用户为已升级
-        # 例如：update_user_membership(uid, True)
+        if uid:
+            update_user_membership(uid, True)
     return {"status": "success"}
 
 @app.get("/")
