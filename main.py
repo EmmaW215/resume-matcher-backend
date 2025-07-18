@@ -21,6 +21,7 @@ stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
 import firebase_admin
 from firebase_admin import credentials, firestore
+from datetime import datetime
 
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 
@@ -334,8 +335,33 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
         raise Exception(f"Comparison failed: {str(e)}")
 
 @app.post("/api/compare")
-async def compare(job_text: str = Form(...), resume: UploadFile = File(...)):
+async def compare(job_text: str = Form(...), resume: UploadFile = File(...), uid: str = Form(None)):
     try:
+        # 1. Firestore 订阅用户生成次数校验
+        planType = None
+        scanLimit = None
+        scansUsed = 0
+        lastScanMonth = None
+        user_ref = None
+        user_data = None
+        now_month = datetime.now().strftime("%Y-%m")
+        if uid:
+            user_ref = db.collection("users").document(uid)
+            user_doc = user_ref.get()
+            if user_doc.exists:
+                user_data = user_doc.to_dict()
+                planType = user_data.get("planType")
+                scanLimit = user_data.get("scanLimit")
+                scansUsed = user_data.get("scansUsed", 0)
+                lastScanMonth = user_data.get("lastScanMonth", "")
+                # 跨月自动重置
+                if lastScanMonth != now_month:
+                    scansUsed = 0
+                    lastScanMonth = now_month
+                # 仅对订阅用户做次数限制
+                if planType in ["basic", "pro"] and scanLimit is not None:
+                    if scansUsed >= scanLimit:
+                        return JSONResponse(status_code=403, content={"error": "You have reached your monthly scan limit. Please upgrade or wait for next month."})
         resume_text = ""
         if resume.filename and resume.filename.endswith(".pdf"):
             resume_text = extract_text_from_pdf(resume)
@@ -348,6 +374,12 @@ async def compare(job_text: str = Form(...), resume: UploadFile = File(...)):
             )
         # 直接用 job_text，不再 extract_text_from_url
         result = await compare_texts(job_text, resume_text)
+        # 2. 分析成功后，订阅用户计数+1 & 写回 Firestore
+        if uid and user_ref and planType in ["basic", "pro"] and scanLimit is not None:
+            user_ref.set({
+                "scansUsed": scansUsed + 1,
+                "lastScanMonth": now_month
+            }, merge=True)
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(
