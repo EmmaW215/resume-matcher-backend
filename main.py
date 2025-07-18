@@ -19,8 +19,16 @@ load_dotenv()
 import os
 stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
+import firebase_admin
+from firebase_admin import credentials
+
+cred = credentials.Certificate("serviceAccountKey.json")
+firebase_admin.initialize_app(cred)
+
 from firebase_admin import firestore
-from firebase_admin_init import db
+
+db = firestore.client()
+# 例如：db.collection("users").document(uid).set({...})
 
 app = FastAPI()  # 必须在最前面
 
