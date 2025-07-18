@@ -396,6 +396,8 @@ async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...
         print("uid:", uid)
         print("price_id:", price_id)
         print("mode:", mode)
+        success_url = "https://resume-update-frontend.vercel.app/success?session_id={CHECKOUT_SESSION_ID}"
+        cancel_url = "https://resume-update-frontend.vercel.app/cancel"
         if mode == "payment":
             session = stripe.checkout.Session.create(
                 payment_method_types=["card"],
@@ -404,8 +406,8 @@ async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...
                     "quantity": 1,
                 }],
                 mode="payment",
-                success_url="http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url="http://localhost:3000/cancel",
+                success_url=success_url,
+                cancel_url=cancel_url,
                 metadata={"uid": uid}
             )
         elif mode == "subscription":
@@ -416,8 +418,8 @@ async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...
                     "quantity": 1,
                 }],
                 mode="subscription",
-                success_url="http://localhost:3000/success?session_id={CHECKOUT_SESSION_ID}",
-                cancel_url="http://localhost:3000/cancel",
+                success_url=success_url,
+                cancel_url=cancel_url,
                 metadata={"uid": uid}
             )
         else:
