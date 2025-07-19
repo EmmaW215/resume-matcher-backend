@@ -474,13 +474,18 @@ async def stripe_webhook(request: Request):
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         uid = session["metadata"].get("uid")
-        # 获取 price_id，确保和 Stripe 后台一致
         price_id = None
-        if "display_items" in session and session["display_items"]:
-            price_id = session["display_items"][0]["price"]["id"]
-        elif "subscription" in session and session["subscription"]:
+
+        # For one-time payment (mode: payment)
+        if session.get("mode") == "payment":
+            # Use Stripe API to list line items for this session
+            line_items = stripe.checkout.Session.list_line_items(session["id"], limit=1)
+            if line_items and line_items["data"]:
+                price_id = line_items["data"][0]["price"]["id"]
+
+        # For subscription
+        elif session.get("mode") == "subscription" and session.get("subscription"):
             subscription = stripe.Subscription.retrieve(session["subscription"])
-            # 取第一个订阅项的 price_id
             price_id = subscription["items"]["data"][0]["price"]["id"]
 
         if uid and price_id:
