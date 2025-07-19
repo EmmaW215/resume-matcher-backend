@@ -178,7 +178,7 @@ async def generate_mock_ai_response(prompt: str, system_prompt: str = "You are a
 <tr><td>Industry Knowledge (Health)</td><td>❌ Lack</td><td>0.0</td></tr>
 </table>
 """
-    elif "percentage score" in prompt.lower():
+    elif "match score" in prompt.lower():
         return "88"
     elif "resume summary" in prompt.lower():
         return """<p>Experienced software developer with 14+ years in full-stack development.<br>Strong expertise in Python, JavaScript, and React. Led development teams and delivered multiple successful projects. Excellent problem-solving skills and team collaboration.</p>"""
@@ -260,7 +260,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
         job_summary_prompt = (
             "Please read the following job posting content:\n\n"
             f"{job_text}\n\n"
-            "Summarize the key job requirements from the job descriptions in the job_text, providing a brief job requirement summary including three parts: Skills & Technical Requirements, Responsibilities, and Qualifications. Use the bullet format for the output of the contents as job summary. Make sure there is a forced line break at the end of each paragraph. Only output in HTML format, with <table>, <tr>, <th>, <td> tags. it should be styled to look clean and modern."
+            "Summarize the job descriptions in the job_text, providing a brief summary by highlighting these parts: 1️⃣ Position title:  2️⃣ Position location:  3️⃣ Potential Salary offers:	4️⃣ Position Responsibilities: 	5️⃣ Skills Required  Ø Tech skills:  Ø Soft skills:   6️⃣ Certifications required:   7️⃣ Educations required:  8️⃣Company's vision statement: . Use the bullet format for the output of the contents as job summary. Make sure there is a forced line break at the end of each paragraph. Only output in HTML format, with <table>, <tr>, <th>, <td> tags. It should be styled to look clean and modern."
         )
         job_summary = await call_ai_api(job_summary_prompt)
         job_summary = f"Key Requirements from this Job Posting:\n\n {job_summary}"
@@ -271,7 +271,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job summary:\n\n"
             f"{job_summary}\n\n"
-            "Output a comparison table based on the highlights of the user's key skills and experiences in the resume_text (the user's resume) and job_summary. Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern. List in the table format with three columns: Categories (key requirements and skills), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern."
+            "Output a comparison table based on job_summary_prompt outputs and the upload resume contents. The comparison is between the highlight result of the skill, certificates, and education requirements from job_summary, and the highlights of the user's key skills and experiences in the user's resume. Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern. List in the table format with three columns: Categories (key job requirements and skills), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern."
         )
         resume_summary = await call_ai_api(resume_summary_prompt)
         print("resume_summary raw output:", resume_summary)
@@ -432,6 +432,31 @@ def update_user_membership(uid, is_upgraded):
     db = firestore.client()
     user_ref = db.collection("users").document(uid)
     user_ref.set({"isUpgraded": is_upgraded}, merge=True)
+
+
+def update_user_membership(uid, price_id):
+    if price_id == "price_1RlsdUCznoMxD717tAkMoRd9":
+        user_ref.set({
+            "isUpgraded": True,
+            "planType": "one_time",
+            "scanLimit": 1,
+            "scansUsed": 0
+        }, merge=True)
+    elif price_id == "price_1RlsfACznoMxD717hHg11MCS":
+        user_ref.set({
+            "isUpgraded": True,
+            "planType": "basic",
+            "scanLimit": 30,
+            "scansUsed": 0
+        }, merge=True)
+    elif price_id == "price_1RlsgyCznoMxD7176oiZ540Z":
+        user_ref.set({
+            "isUpgraded": True,
+            "planType": "pro",
+            "scanLimit": 180,
+            "scansUsed": 0
+        }, merge=True)
+
 
 @app.post("/api/stripe-webhook")
 async def stripe_webhook(request: Request):
