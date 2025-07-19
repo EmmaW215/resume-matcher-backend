@@ -474,30 +474,32 @@ async def stripe_webhook(request: Request):
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         uid = session["metadata"].get("uid")
-        # 你需要根据实际 Stripe 返回结构获取 price_id
-        # 下面是常见写法，具体以你的 Stripe 返回为准
+        # 获取 price_id，确保和 Stripe 后台一致
         price_id = None
         if "display_items" in session and session["display_items"]:
             price_id = session["display_items"][0]["price"]["id"]
-        elif "lines" in session and "data" in session["lines"] and session["lines"]["data"]:
-            price_id = session["lines"]["data"][0]["price"]["id"]
+        elif "subscription" in session and session["subscription"]:
+            subscription = stripe.Subscription.retrieve(session["subscription"])
+            # 取第一个订阅项的 price_id
+            price_id = subscription["items"]["data"][0]["price"]["id"]
+
         if uid and price_id:
             user_ref = db.collection("users").document(uid)
-            if price_id == "price_1RlsdUCznoMxD717tAkMoRd9":  # $2
+            if price_id == "price_1RlsdUCznoMxD717tAkMoRd9":
                 user_ref.set({
                     "isUpgraded": True,
                     "planType": "one_time",
                     "scanLimit": 1,
                     "scansUsed": 0
                 }, merge=True)
-            elif price_id == "price_1RlsfACznoMxD717hHg11MCS":  # $6
+            elif price_id == "price_1RlsfACznoMxD717hHg11MCS":
                 user_ref.set({
                     "isUpgraded": True,
                     "planType": "basic",
                     "scanLimit": 30,
                     "scansUsed": 0
                 }, merge=True)
-            elif price_id == "price_1RlsgyCznoMxD7176oiZ540Z":  # $15
+            elif price_id == "price_1RlsgyCznoMxD7176oiZ540Z":
                 user_ref.set({
                     "isUpgraded": True,
                     "planType": "pro",
