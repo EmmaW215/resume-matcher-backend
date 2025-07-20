@@ -33,27 +33,112 @@ db = firestore.client()
 
 app = FastAPI()  # 必须在最前面
 
-# 查询用户试用状态
-@app.get("/api/user/trial-status")
-async def get_trial_status(uid: str = Query(...)):
+# 统一的用户状态管理
+class UserStatus:
+    def __init__(self, uid: str):
+        self.uid = uid
+        self.user_ref = db.collection("users").document(uid)
+        self.now_month = datetime.now().strftime("%Y-%m")
+    
+    def get_status(self):
+        """获取用户完整状态"""
+        try:
+            doc = self.user_ref.get()
+            if doc.exists:
+                data = doc.to_dict()
+                return self._process_user_data(data)
+            else:
+                return self._get_default_status()
+        except Exception as e:
+            print(f"Error getting user status: {e}")
+            return self._get_default_status()
+    
+    def _process_user_data(self, data):
+        """处理用户数据，包括跨月重置"""
+        lastScanMonth = data.get("lastScanMonth", "")
+        scansUsed = data.get("scansUsed", 0)
+        
+        # 跨月自动重置
+        if lastScanMonth != self.now_month:
+            scansUsed = 0
+            self.user_ref.set({
+                "scansUsed": 0,
+                "lastScanMonth": self.now_month
+            }, merge=True)
+        
+        return {
+            "trialUsed": data.get("trialUsed", False),
+            "isUpgraded": data.get("isUpgraded", False),
+            "planType": data.get("planType"),
+            "scanLimit": data.get("scanLimit"),
+            "scansUsed": scansUsed,
+            "lastScanMonth": self.now_month
+        }
+    
+    def _get_default_status(self):
+        """获取默认状态"""
+        return {
+            "trialUsed": False,
+            "isUpgraded": False,
+            "planType": None,
+            "scanLimit": None,
+            "scansUsed": 0,
+            "lastScanMonth": self.now_month
+        }
+    
+    def can_generate(self):
+        """检查用户是否可以生成分析"""
+        status = self.get_status()
+        
+        # 新用户或未使用试用
+        if not status["trialUsed"]:
+            return True, "trial_available"
+        
+        # 已升级用户
+        if status["isUpgraded"]:
+            if status["scanLimit"] is None:
+                return True, "unlimited"
+            if status["scansUsed"] < status["scanLimit"]:
+                return True, "subscription_available"
+            else:
+                return False, "subscription_limit_reached"
+        
+        # 试用已用但未升级
+        return False, "trial_used"
+    
+    def mark_trial_used(self):
+        """标记试用已使用"""
+        self.user_ref.set({"trialUsed": True}, merge=True)
+    
+    def increment_scan_count(self):
+        """增加扫描次数"""
+        status = self.get_status()
+        if status["isUpgraded"] and status["scanLimit"] is not None:
+            self.user_ref.set({
+                "scansUsed": status["scansUsed"] + 1,
+                "lastScanMonth": self.now_month
+            }, merge=True)
+
+# 查询用户完整状态（试用、订阅、使用次数）
+@app.get("/api/user/status")
+async def get_user_status(uid: str = Query(...)):
     try:
-        doc_ref = db.collection("users").document(uid)
-        doc = doc_ref.get()
-        if doc.exists:
-            data = doc.to_dict()
-            return {"trialUsed": data.get("trialUsed", False)}
-        else:
-            return {"trialUsed": False}
+        user_status = UserStatus(uid)
+        return user_status.get_status()
     except Exception as e:
         return {"error": str(e)}
 
-# 标记用户已使用试用
-@app.post("/api/user/use-trial")
-async def use_trial(uid: str = Query(...)):
+# 检查用户是否可以生成分析
+@app.get("/api/user/can-generate")
+async def can_generate(uid: str = Query(...)):
     try:
-        doc_ref = db.collection("users").document(uid)
-        doc_ref.set({"trialUsed": True}, merge=True)
-        return {"success": True}
+        user_status = UserStatus(uid)
+        can_gen, reason = user_status.can_generate()
+        return {
+            "canGenerate": can_gen,
+            "reason": reason,
+            "status": user_status.get_status()
+        }
     except Exception as e:
         return {"error": str(e)}
 
@@ -337,31 +422,22 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
 @app.post("/api/compare")
 async def compare(job_text: str = Form(...), resume: UploadFile = File(...), uid: str = Form(None)):
     try:
-        # 1. Firestore 订阅用户生成次数校验
-        planType = None
-        scanLimit = None
-        scansUsed = 0
-        lastScanMonth = None
-        user_ref = None
-        user_data = None
-        now_month = datetime.now().strftime("%Y-%m")
+        # 1. 检查用户权限
         if uid:
-            user_ref = db.collection("users").document(uid)
-            user_doc = user_ref.get()
-            if user_doc.exists:
-                user_data = user_doc.to_dict()
-                planType = user_data.get("planType")
-                scanLimit = user_data.get("scanLimit")
-                scansUsed = user_data.get("scansUsed", 0)
-                lastScanMonth = user_data.get("lastScanMonth", "")
-                # 跨月自动重置
-                if lastScanMonth != now_month:
-                    scansUsed = 0
-                    lastScanMonth = now_month
-                # 仅对订阅用户做次数限制
-                if planType in ["basic", "pro"] and scanLimit is not None:
-                    if scansUsed >= scanLimit:
-                        return JSONResponse(status_code=403, content={"error": "You have reached your monthly scan limit. Please upgrade or wait for next month."})
+            user_status = UserStatus(uid)
+            can_gen, reason = user_status.can_generate()
+            
+            if not can_gen:
+                error_messages = {
+                    "trial_used": "Your free trial is finished. Please upgrade to continue using MatchWise!",
+                    "subscription_limit_reached": "You have reached your monthly scan limit. Please upgrade your plan or wait for next month."
+                }
+                return JSONResponse(
+                    status_code=403, 
+                    content={"error": error_messages.get(reason, "Access denied")}
+                )
+        
+        # 2. 处理简历文件
         resume_text = ""
         if resume.filename and resume.filename.endswith(".pdf"):
             resume_text = extract_text_from_pdf(resume)
@@ -372,14 +448,23 @@ async def compare(job_text: str = Form(...), resume: UploadFile = File(...), uid
                 status_code=400,
                 content={"error": "Unsupported file format. Please upload PDF or DOCX."},
             )
-        # 直接用 job_text，不再 extract_text_from_url
+        
+        # 3. 调用AI分析
         result = await compare_texts(job_text, resume_text)
-        # 2. 分析成功后，订阅用户计数+1 & 写回 Firestore
-        if uid and user_ref and planType in ["basic", "pro"] and scanLimit is not None:
-            user_ref.set({
-                "scansUsed": scansUsed + 1,
-                "lastScanMonth": now_month
-            }, merge=True)
+        
+        # 4. 更新用户状态
+        if uid:
+            user_status = UserStatus(uid)
+            status = user_status.get_status()
+            
+            # 如果是试用用户，标记试用已使用
+            if not status["trialUsed"]:
+                user_status.mark_trial_used()
+            
+            # 如果是订阅用户，增加使用次数
+            if status["isUpgraded"]:
+                user_status.increment_scan_count()
+        
         return JSONResponse(content=result)
     except Exception as e:
         return JSONResponse(
@@ -428,13 +513,8 @@ async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...
     except Exception as e:
         return {"error": str(e)}
 
-def update_user_membership(uid, is_upgraded):
-    db = firestore.client()
-    user_ref = db.collection("users").document(uid)
-    user_ref.set({"isUpgraded": is_upgraded}, merge=True)
-
-
 def update_user_membership(uid, price_id):
+    user_ref = db.collection("users").document(uid)
     if price_id == "price_1RlsdUCznoMxD717tAkMoRd9":
         user_ref.set({
             "isUpgraded": True,
@@ -463,6 +543,7 @@ async def stripe_webhook(request: Request):
     payload = await request.body()
     sig_header = request.headers.get("stripe-signature")
     event = None
+    
     try:
         event = stripe.Webhook.construct_event(
             payload, sig_header, STRIPE_WEBHOOK_SECRET
@@ -476,41 +557,74 @@ async def stripe_webhook(request: Request):
         uid = session["metadata"].get("uid")
         price_id = None
 
-        # For one-time payment (mode: payment)
-        if session.get("mode") == "payment":
-            # Use Stripe API to list line items for this session
-            line_items = stripe.checkout.Session.list_line_items(session["id"], limit=1)
-            if line_items and line_items["data"]:
-                price_id = line_items["data"][0]["price"]["id"]
+        try:
+            # For one-time payment (mode: payment)
+            if session.get("mode") == "payment":
+                line_items = stripe.checkout.Session.list_line_items(session["id"], limit=1)
+                if line_items and line_items["data"]:
+                    price_id = line_items["data"][0]["price"]["id"]
 
-        # For subscription
-        elif session.get("mode") == "subscription" and session.get("subscription"):
-            subscription = stripe.Subscription.retrieve(session["subscription"])
-            price_id = subscription["items"]["data"][0]["price"]["id"]
+            # For subscription
+            elif session.get("mode") == "subscription" and session.get("subscription"):
+                subscription = stripe.Subscription.retrieve(session["subscription"])
+                price_id = subscription["items"]["data"][0]["price"]["id"]
 
-        if uid and price_id:
-            user_ref = db.collection("users").document(uid)
-            if price_id == "price_1RlsdUCznoMxD717tAkMoRd9":
-                user_ref.set({
-                    "isUpgraded": True,
-                    "planType": "one_time",
-                    "scanLimit": 1,
-                    "scansUsed": 0
-                }, merge=True)
-            elif price_id == "price_1RlsfACznoMxD717hHg11MCS":
-                user_ref.set({
-                    "isUpgraded": True,
-                    "planType": "basic",
-                    "scanLimit": 30,
-                    "scansUsed": 0
-                }, merge=True)
-            elif price_id == "price_1RlsgyCznoMxD7176oiZ540Z":
-                user_ref.set({
-                    "isUpgraded": True,
-                    "planType": "pro",
-                    "scanLimit": 180,
-                    "scansUsed": 0
-                }, merge=True)
+            if uid and price_id:
+                user_status = UserStatus(uid)
+                
+                # Update user membership based on price_id
+                if price_id == "price_1RlsdUCznoMxD717tAkMoRd9":
+                    # $2 one-time payment
+                    user_status.user_ref.set({
+                        "isUpgraded": True,
+                        "planType": "one_time",
+                        "scanLimit": 1,
+                        "scansUsed": 0,
+                        "lastScanMonth": datetime.now().strftime("%Y-%m")
+                    }, merge=True)
+                    print(f"✅ User {uid} upgraded to one-time plan")
+                    
+                elif price_id == "price_1RlsfACznoMxD717hHg11MCS":
+                    # $6/month subscription
+                    user_status.user_ref.set({
+                        "isUpgraded": True,
+                        "planType": "basic",
+                        "scanLimit": 30,
+                        "scansUsed": 0,
+                        "lastScanMonth": datetime.now().strftime("%Y-%m")
+                    }, merge=True)
+                    print(f"✅ User {uid} upgraded to basic subscription")
+                    
+                elif price_id == "price_1RlsgyCznoMxD7176oiZ540Z":
+                    # $15/month subscription
+                    user_status.user_ref.set({
+                        "isUpgraded": True,
+                        "planType": "pro",
+                        "scanLimit": 180,
+                        "scansUsed": 0,
+                        "lastScanMonth": datetime.now().strftime("%Y-%m")
+                    }, merge=True)
+                    print(f"✅ User {uid} upgraded to pro subscription")
+                else:
+                    print(f"⚠️ Unknown price_id: {price_id}")
+            else:
+                print(f"⚠️ Missing uid or price_id: uid={uid}, price_id={price_id}")
+                
+        except Exception as e:
+            print(f"❌ Error processing webhook: {e}")
+            return {"status": "error", "message": str(e)}
+    
+    elif event["type"] == "customer.subscription.deleted":
+        # Handle subscription cancellation
+        subscription = event["data"]["object"]
+        # You might want to update user status when subscription is cancelled
+        print(f"📝 Subscription cancelled: {subscription['id']}")
+    
+    elif event["type"] == "invoice.payment_failed":
+        # Handle failed payments
+        invoice = event["data"]["object"]
+        print(f"❌ Payment failed for invoice: {invoice['id']}")
+    
     return {"status": "success"}
 
 @app.get("/")
