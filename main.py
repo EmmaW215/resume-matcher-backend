@@ -220,6 +220,9 @@ async def call_openai_api(prompt: str, system_prompt: str = "You are a helpful A
 async def generate_mock_ai_response(prompt: str, system_prompt: str = "You are a helpful AI assistant specializing in job application analysis.") -> str:
     if "job posting" in prompt.lower() and "summarize" in prompt.lower():
         return """
+
+<p><b>This is a mock result due to AI not being called!</b></p>
+
 <p><b>Skills & Technical Expertise:</b></p>
 <ul>
 <li>Technical program management (Agile, Scrum, Kanban)</li>
@@ -269,11 +272,11 @@ async def generate_mock_ai_response(prompt: str, system_prompt: str = "You are a
         return """<p>Experienced software developer with 14+ years in full-stack development.<br>Strong expertise in Python, JavaScript, and React. Led development teams and delivered multiple successful projects. Excellent problem-solving skills and team collaboration.</p>"""
     elif "work experience" in prompt.lower():
         return """<ul>
-<li>Led development of e-commerce platform using React and Node.js</li>
-<li>Implemented RESTful APIs and microservices architecture</li>
-<li>Managed team of 3 developers and delivered projects on time</li>
-<li>Optimized database queries improving performance by 40%</li>
-<li>Integrated third-party payment systems and analytics tools</li>
+<li>Ø Led development of e-commerce platform using React and Node.js</li>
+<li>Ø Implemented RESTful APIs and microservices architecture</li>
+<li>Ø Managed team of 3 developers and delivered projects on time</li>
+<li>Ø Optimized database queries improving performance by 40%</li>
+<li>Ø Integrated third-party payment systems and analytics tools</li>
 </ul>"""
     elif "cover letter" in prompt.lower():
         return """<p>Dear Hiring Manager,</p>
@@ -345,7 +348,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
         job_summary_prompt = (
             "Please read the following job posting content:\n\n"
             f"{job_text}\n\n"
-            "Summarize the job descriptions in the job_text, providing a brief summary by highlighting these parts: 1️⃣ Position title:  2️⃣ Position location:  3️⃣ Potential Salary offers:	4️⃣ Position Responsibilities: 	5️⃣ Skills Required  Ø Tech skills:  Ø Soft skills:   6️⃣ Certifications required:   7️⃣ Educations required:  8️⃣Company's vision statement: . Use the bullet format for the output of the contents as job summary. Make sure there is a forced line break at the end of each paragraph. Only output in HTML format, with <table>, <tr>, <th>, <td> tags. It should be styled to look clean and modern."
+            "Summarize the job descriptions in the job_text, providing a brief summary by highlighting these parts: Ø Position title: Ø Position location: Ø Potential Salary offers: Ø Position Responsibilities: Ø Skills Required - Tech skills: Soft skills:  Ø Certifications required:  Ø Educations required:  Ø Company's vision statement: . Use the bullet format for the output of the contents as job summary. Make sure there is a forced line break at the end of each paragraph. The output should be in HTML format. It should be styled to look clean and modern."
         )
         job_summary = await call_ai_api(job_summary_prompt)
         job_summary = f"Key Requirements from this Job Posting:\n\n {job_summary}"
@@ -356,7 +359,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job summary:\n\n"
             f"{job_summary}\n\n"
-            "Output a comparison table based on job_summary_prompt outputs and the upload resume contents. The comparison is between the highlight result of the skill, certificates, and education requirements from job_summary, and the highlights of the user's key skills and experiences in the user's resume. Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern. List in the table format with three columns: Categories (key job requirements and skills), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern."
+            "Output a comparison table based on job_summary_prompt outputs and the upload resume contents. The comparison is between the highlight result of the skills, certificates, and education requirements from job_summary, and the highlights of the user's key skills and experiences in the user's resume. Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern. List in the table format with three columns: Categories (key job requirements and skills), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern."
         )
         resume_summary = await call_ai_api(resume_summary_prompt)
         print("resume_summary raw output:", resume_summary)
@@ -378,7 +381,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job content:\n\n"
             f"{job_text}\n\n"
-            "Based on the original summary in resume_text (the user's resume), provide a revised summary, If there is no summary section in the user's resume, write a new one as the revised summary. Ensure the user's skills and work experiences in the revised summary are better matched with the job requirements in the job_text. Keep the overall summary within 1700 characters."
+            "Based on the original summary in resume_text (the user's resume), provide a revised summary, If there is no summary section in the user's resume, write a new one as the revised summary. Ensure the user's skills and work experiences in the revised summary are better matched with the job requirements in the job_text. Keep the overall summary within 1700 characters. The output should be in HTML format. It should be styled to look clean and modern."
         )
         tailored_resume_summary = await call_ai_api(tailored_resume_summary_prompt)
         tailored_resume_summary = f"\n{tailored_resume_summary}"
@@ -389,7 +392,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job content:\n\n"
             f"{job_text}\n\n"
-            "Find the latest work experiences from the resume_text (the user's resume), modify and revise the user work experience details to better match with the job requirements in the job_text. Keep the revised output in bullet format, and overall within 7 bullets."
+            "Find the latest work experiences from the resume_text (the user's resume), modify and revise the user work experience details to better match with the job requirements in the job_text. Keep the revised output in bullet format, and overall no more than 7 bullets. The output should be in HTML format. Make sure there are line breaks between paragraphs. It should be styled to look clean and modern."
         )
         tailored_work_experience_text = await call_ai_api(tailored_work_experience_prompt)
         tailored_work_experience_lines = [line.strip() for line in tailored_work_experience_text.split("\n") if line.strip().startswith("-")]
