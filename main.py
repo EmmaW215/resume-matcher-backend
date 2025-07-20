@@ -348,12 +348,13 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
         job_summary_prompt = (
             "Please read the following job posting content:\n\n"
             f"{job_text}\n\n"
+            
             "Summarize the job descriptions by extracting and organizing the following information into a clean HTML bullet list format:\n\n"
             "<ul>\n"
-            "<li><strong>Position Title:</strong> [extract the job title]</li>\n"
-            "<li><strong>Position Location:</strong> [extract the location]</li>\n"
-            "<li><strong>Potential Salary:</strong> [extract salary information if available]</li>\n"
-            "<li><strong>Position Responsibilities:</strong>\n"
+            "<li><strong>Position Title: </strong> [extract the job title]</li>\n"
+            "<li><strong>Position Location: </strong> [extract the location]</li>\n"
+            "<li><strong>Potential Salary: </strong> [extract salary information if available]</li>\n"
+            "<li><strong>Position Responsibilities: </strong>\n"
             "  <ul>\n"
             "    <li>[responsibility 1]</li>\n"
             "    <li>[responsibility 2]</li>\n"
@@ -361,7 +362,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "    <li>[responsibility 4]</li>\n"
             "  </ul>\n"
             "</li>\n"
-            "<li><strong>Technical Skills Required:</strong>\n"
+            "<li><strong>Technical Skills Required: </strong>\n"
             "  <ul>\n"
             "    <li>[tech skill 1]</li>\n"
             "    <li>[tech skill 2]</li>\n"
@@ -369,7 +370,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "    <li>[tech skill 4]</li>\n"
             "  </ul>\n"
             "</li>\n"
-            "<li><strong>Soft Skills Required:</strong>\n"
+            "<li><strong>Soft Skills Required: </strong>\n"
             "  <ul>\n"
             "    <li>[soft skill 1]</li>\n"
             "    <li>[soft skill 2]</li>\n"
@@ -377,11 +378,11 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "    <li>[soft skill 4]</li>\n"
             "  </ul>\n"
             "</li>\n"
-            "<li><strong>Certifications Required:</strong> [extract certification requirements]</li>\n"
-            "<li><strong>Education Required:</strong> [extract education requirements]</li>\n"
-            "<li><strong>Company Vision:</strong> [extract company vision/mission if available]</li>\n"
+            "<li><strong>Certifications Required: </strong> [extract certification requirements]</li>\n"
+            "<li><strong>Education Required: </strong> [extract education requirements]</li>\n"
+            "<li><strong>Company Vision: </strong> [extract company vision/mission if available]</li>\n"
             "</ul>\n\n"
-            "Please extract the actual information from the job posting and format it exactly as shown above using proper HTML tags. If any information is not available in the job posting, use 'Not specified' for that item. Ensure the output is clean, well-structured, and uses proper HTML formatting."
+            "Please extract the actual information from the job posting. Organize the output into a clean HTML bullet list using the structure above. Return the result wrapped inside triple backticks and identify the language as HTML. If any information is not available in the job posting, use 'Not specified' for that item. Ensure the output is clean, well-structured, and uses proper HTML formatting."
         )
         job_summary = await call_ai_api(job_summary_prompt)
         job_summary = f"Key Requirements from this Job Posting:\n\n {job_summary}"
@@ -435,7 +436,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "<li>[revised work experience bullet 6]</li>\n"
             "<li>[revised work experience bullet 7]</li>\n"
             "</ul>\n\n"
-            "Please provide the actual revised work experience content formatted exactly as shown above using proper HTML tags. Focus on the most recent and relevant experiences that align with the job requirements. Keep each bullet point concise and impactful."
+            "Please provide the actual revised work experience content. Organize the output into a clean HTML bullet list using the structure above. Return the result wrapped inside triple backticks and identify the language as HTML. Focus on the most recent and relevant experiences that align with the job requirements. Keep each bullet point concise and impactful."
         )
         tailored_work_experience_html = await call_ai_api(tailored_work_experience_prompt)
 
