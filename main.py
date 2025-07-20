@@ -349,40 +349,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             "Please read the following job posting content:\n\n"
             f"{job_text}\n\n"
             
-            "Summarize the job descriptions by extracting and organizing the following information into a clean HTML bullet list format:\n\n"
-            "<ul>\n"
-            "<li><strong>Position Title: </strong> [extract the job title]</li>\n"
-            "<li><strong>Position Location: </strong> [extract the location]</li>\n"
-            "<li><strong>Potential Salary: </strong> [extract salary information if available]</li>\n"
-            "<li><strong>Position Responsibilities: </strong>\n"
-            "  <ul>\n"
-            "    <li>[responsibility 1]</li>\n"
-            "    <li>[responsibility 2]</li>\n"
-            "    <li>[responsibility 3]</li>\n"
-            "    <li>[responsibility 4]</li>\n"
-            "  </ul>\n"
-            "</li>\n"
-            "<li><strong>Technical Skills Required: </strong>\n"
-            "  <ul>\n"
-            "    <li>[tech skill 1]</li>\n"
-            "    <li>[tech skill 2]</li>\n"
-            "    <li>[tech skill 3]</li>\n"
-            "    <li>[tech skill 4]</li>\n"
-            "  </ul>\n"
-            "</li>\n"
-            "<li><strong>Soft Skills Required: </strong>\n"
-            "  <ul>\n"
-            "    <li>[soft skill 1]</li>\n"
-            "    <li>[soft skill 2]</li>\n"
-            "    <li>[soft skill 3]</li>\n"
-            "    <li>[soft skill 4]</li>\n"
-            "  </ul>\n"
-            "</li>\n"
-            "<li><strong>Certifications Required: </strong> [extract certification requirements]</li>\n"
-            "<li><strong>Education Required: </strong> [extract education requirements]</li>\n"
-            "<li><strong>Company Vision: </strong> [extract company vision/mission if available]</li>\n"
-            "</ul>\n\n"
-            "Please extract the actual information from the job posting. Organize the output into a clean HTML bullet list using the structure above. Return the result wrapped inside triple backticks and identify the language as HTML. If any information is not available in the job posting, use 'Not specified' for that item. Ensure the output is clean, well-structured, and uses proper HTML formatting."
+            "Summarize the job descriptions by extracting and organizing the following information into a clean HTML bullet list format:             <ul>            <li><strong>Position Title: </strong> [extract the job title]</li>            <li><strong>Position Location: </strong> [extract the location]</li>            <li><strong>Potential Salary: </strong> [extract salary information if available]</li>            <li><strong>Position Responsibilities: </strong>            <ul>                  <li>[responsibility 1]</li>                   <li>[responsibility 2]</li>                   <li>[responsibility 3]</li>                  <li>[responsibility 4]</li>               </ul>             </li>             <li><strong>Technical Skills Required: </strong>               <ul>                 <li>[tech skill 1]</li>                 <li>[tech skill 2]</li>                 <li>[tech skill 3]</li>                 <li>[tech skill 4]</li>               </ul>             </li>             <li><strong>Soft Skills Required: </strong>               <ul>                 <li>[soft skill 1]</li>                 <li>[soft skill 2]</li>                 <li>[soft skill 3]</li>                 <li>[soft skill 4]</li>               </ul>             </li>             <li><strong>Certifications Required: </strong> [extract certification requirements]</li>             <li><strong>Education Required: </strong> [extract education requirements]</li>             <li><strong>Company Vision: </strong> [extract company vision/mission if available]</li>             </ul>\n            Please extract the actual information from the job posting. Using the structure above, organize the output into a clean HTML bullet list format. If any information is not available in the job posting, use 'Not specified' for that item. Ensure the output is clean, well-structured, and uses proper HTML bullet list formatting."
         )
         job_summary = await call_ai_api(job_summary_prompt)
         job_summary = f"Key Requirements from this Job Posting:\n\n {job_summary}"
@@ -393,7 +360,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job summary:\n\n"
             f"{job_summary}\n\n"
-            "Output a comparison table based on job_summary_prompt outputs and the upload resume contents. The comparison is between the highlight result of the skills, certificates, and education requirements from job_summary, and the highlights of the user's key skills and experiences in the user's resume. Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern. List in the table format with three columns: Categories (each items of job requirements, skills, certifications, and educations), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern."
+            "Output a comparison table. The comparison is between the highlight result of the responsibilities, skills, certificates, and education requirements from job_summary_prompt outputs and the highlights of the user's skills and experiences in the upload resume contents. Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern. List in the table format with three columns: Categories (All the items listed from the requirements of position responsibilities and skills, certifications, and educations), Match Status (four status will be used: ✅Strong/✅Moderate-strong/⚠️Partial/❌Lack), and Comments (very precise comment on how the user's experiences matches with the job requirement). Only output the table in HTML format, with <table>, <tr>, <th>, <td> tags, and do not add any explanation or extra text. The table should be styled to look clean and modern."
         )
         resume_summary = await call_ai_api(resume_summary_prompt)
         print("resume_summary raw output:", resume_summary)
@@ -426,17 +393,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job content:\n\n"
             f"{job_text}\n\n"
-            "Find the latest work experiences from the resume and modify them to better match the job requirements. Format the output as a clean HTML unordered list with no more than 7 bullet points:\n\n"
-            "<ul>\n"
-            "<li>[revised work experience bullet 1]</li>\n"
-            "<li>[revised work experience bullet 2]</li>\n"
-            "<li>[revised work experience bullet 3]</li>\n"
-            "<li>[revised work experience bullet 4]</li>\n"
-            "<li>[revised work experience bullet 5]</li>\n"
-            "<li>[revised work experience bullet 6]</li>\n"
-            "<li>[revised work experience bullet 7]</li>\n"
-            "</ul>\n\n"
-            "Please provide the actual revised work experience content. Organize the output into a clean HTML bullet list using the structure above. Return the result wrapped inside triple backticks and identify the language as HTML. Focus on the most recent and relevant experiences that align with the job requirements. Keep each bullet point concise and impactful."
+            "Find the latest work experiences from the resume and modify them to better match the job requirements. Format the output as a clean HTML unordered list with no more than 7 bullet points:              <ul>             <li>[revised work experience bullet 1]</li>             <li>[revised work experience bullet 2]</li>             <li>[revised work experience bullet 3]</li>             <li>[revised work experience bullet 4]</li>             <li>[revised work experience bullet 5]</li>             <li>[revised work experience bullet 6]</li>             <li>[revised work experience bullet 7]</li>             </ul>             Please provide the actual revised work experience content. Organize the output into a clean HTML bullet list using the structure above. Return the result wrapped inside triple backticks and identify the language as HTML. Focus on the most recent and relevant experiences that align with the job requirements. Keep each bullet point concise and impactful. Ensure the output uses proper HTML bullet list formatting."
         )
         tailored_work_experience_html = await call_ai_api(tailored_work_experience_prompt)
 
@@ -446,7 +403,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
             f"{resume_text}\n\n"
             "And the following job content:\n\n"
             f"{job_text}\n\n"
-            "Provide a formal cover letter for applying to the job applying. The job position and the company name in the cover letter for applying should be the same as what being used in the job_text. The cover letter should show the user's key strengths and highlight the user's best fit skills and experiences according to the job posting in job_text, then express the user's passions for the position, and express appreciation for a future interview opportunity. The overall tone of the cover letter should be confident, honest, and professional. The cover letters should be written in the first person. Only output in HTML format, using <p> and <br> tags for formatting. Do not output markdown or plain text."
+            "Provide a formal cover letter for applying to the job applying. The job position and the company name in the cover letter for applying should be the same as what being used in the job_text. The cover letter should show the user's key strengths and highlight the user's best fit skills and experiences according to the job posting in job_text, then express the user's passions for the position, and express appreciation for a future interview opportunity. The overall tone of the cover letter should be confident, honest, and professional. The cover letters should be written in the first person. Only output in HTML format, using <p> and <br> tags for formatting. Make sure there are line breaks between each paragraph. Do not output markdown or plain text."
         )
         cover_letter = await call_ai_api(cover_letter_prompt)
         cover_letter = f"\n{cover_letter}"
