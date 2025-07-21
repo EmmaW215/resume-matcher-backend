@@ -513,21 +513,21 @@ async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...
 
 def update_user_membership(uid, price_id):
     user_ref = db.collection("users").document(uid)
-    if price_id == "price_1RlsdUCznoMxD717tAkMoRd9":
+    if price_id == "price_1RnBbcE6OOEHr6Zo6igE1U8B":
         user_ref.set({
             "isUpgraded": True,
             "planType": "one_time",
             "scanLimit": 1,
             "scansUsed": 0
         }, merge=True)
-    elif price_id == "price_1RlsfACznoMxD717hHg11MCS":
+    elif price_id == "price_1RnBehE6OOEHr6Zo4QLLJZTg":
         user_ref.set({
             "isUpgraded": True,
             "planType": "basic",
             "scanLimit": 30,
             "scansUsed": 0
         }, merge=True)
-    elif price_id == "price_1RlsgyCznoMxD7176oiZ540Z":
+    elif price_id == "price_1RnBgPE6OOEHr6Zo9EFmgyA5":
         user_ref.set({
             "isUpgraded": True,
             "planType": "pro",
@@ -571,7 +571,7 @@ async def stripe_webhook(request: Request):
                 user_status = UserStatus(uid)
                 
                 # Update user membership based on price_id
-                if price_id == "price_1RlsdUCznoMxD717tAkMoRd9":
+                if price_id == "price_1RnBbcE6OOEHr6Zo6igE1U8B":
                     # $2 one-time payment
                     user_status.user_ref.set({
                         "isUpgraded": True,
@@ -582,7 +582,7 @@ async def stripe_webhook(request: Request):
                     }, merge=True)
                     print(f"✅ User {uid} upgraded to one-time plan")
                     
-                elif price_id == "price_1RlsfACznoMxD717hHg11MCS":
+                elif price_id == "price_1RnBehE6OOEHr6Zo4QLLJZTg":
                     # $6/month subscription
                     user_status.user_ref.set({
                         "isUpgraded": True,
@@ -593,7 +593,7 @@ async def stripe_webhook(request: Request):
                     }, merge=True)
                     print(f"✅ User {uid} upgraded to basic subscription")
                     
-                elif price_id == "price_1RlsgyCznoMxD7176oiZ540Z":
+                elif price_id == "price_1RnBgPE6OOEHr6Zo9EFmgyA5":
                     # $15/month subscription
                     user_status.user_ref.set({
                         "isUpgraded": True,
