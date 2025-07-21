@@ -21,7 +21,7 @@ stripe.api_key = os.environ.get("STRIPE_SECRET_KEY")
 
 import firebase_admin
 from firebase_admin import credentials, firestore
-from datetime import datetime
+from datetime import datetime, timedelta
 
 STRIPE_WEBHOOK_SECRET = os.environ.get("STRIPE_WEBHOOK_SECRET")
 
@@ -59,20 +59,30 @@ class UserStatus:
         scansUsed = data.get("scansUsed", 0)
         
         # 跨月自动重置
-        if lastScanMonth != self.now_month:
-            scansUsed = 0
-            self.user_ref.set({
-                "scansUsed": 0,
-                "lastScanMonth": self.now_month
-            }, merge=True)
+        # if lastScanMonth != self.now_month:
+        #     scansUsed = 0
+        #     self.user_ref.set({
+        #         "scansUsed": 0,
+        #         "lastScanMonth": self.now_month
+        #     }, merge=True)
         
+        subscription_end = data.get("subscriptionEnd")
+        is_subscription_active = True
+        if subscription_end:
+            try:
+                is_subscription_active = datetime.utcnow() < datetime.fromisoformat(subscription_end)
+            except Exception:
+                is_subscription_active = False
+
         return {
             "trialUsed": data.get("trialUsed", False),
             "isUpgraded": data.get("isUpgraded", False),
             "planType": data.get("planType"),
             "scanLimit": data.get("scanLimit"),
             "scansUsed": scansUsed,
-            "lastScanMonth": self.now_month
+            "lastScanMonth": self.now_month,
+            "subscriptionActive": is_subscription_active,
+            "subscriptionEnd": subscription_end,
         }
     
     def _get_default_status(self):
@@ -96,6 +106,9 @@ class UserStatus:
         
         # 已升级用户
         if status["isUpgraded"]:
+            # 新增订阅有效期判断
+            if "subscriptionActive" in status and not status["subscriptionActive"]:
+                return False, "subscription_expired"
             if status["scanLimit"] is None:
                 return True, "unlimited"
             if status["scansUsed"] < status["scanLimit"]:
@@ -584,23 +597,27 @@ async def stripe_webhook(request: Request):
                     
                 elif price_id == "price_1RnBehE6OOEHr6Zo4QLLJZTg":
                     # $6/month subscription
+                    now = datetime.utcnow()
                     user_status.user_ref.set({
                         "isUpgraded": True,
                         "planType": "basic",
                         "scanLimit": 30,
                         "scansUsed": 0,
-                        "lastScanMonth": datetime.now().strftime("%Y-%m")
+                        "subscriptionStart": now.isoformat(),
+                        "subscriptionEnd": (now + timedelta(days=30)).isoformat()
                     }, merge=True)
                     print(f"✅ User {uid} upgraded to basic subscription")
                     
                 elif price_id == "price_1RnBgPE6OOEHr6Zo9EFmgyA5":
                     # $15/month subscription
+                    now = datetime.utcnow()
                     user_status.user_ref.set({
                         "isUpgraded": True,
                         "planType": "pro",
                         "scanLimit": 180,
                         "scansUsed": 0,
-                        "lastScanMonth": datetime.now().strftime("%Y-%m")
+                        "subscriptionStart": now.isoformat(),
+                        "subscriptionEnd": (now + timedelta(days=30)).isoformat()
                     }, merge=True)
                     print(f"✅ User {uid} upgraded to pro subscription")
                 else:
