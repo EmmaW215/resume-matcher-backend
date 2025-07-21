@@ -650,5 +650,14 @@ def root():
 def health():
     return {"status": "ok"}
 
+@app.post("/api/user/use-trial")
+async def use_trial(request: Request):
+    # 这里根据你的业务逻辑处理试用
+    # 例如：获取 uid，更新 Firestore，返回试用状态
+    data = await request.json()
+    uid = data.get("uid") or request.query_params.get("uid")
+    # ... 你的业务逻辑 ...
+    return JSONResponse({"success": True, "message": "Trial used."})
+
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
