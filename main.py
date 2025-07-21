@@ -379,7 +379,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
 
         # c. Match Score
         match_score_prompt = (
-            "Directly copy the final calculated percentage number of Match Score (%) from resume_summary_prompt, rounded to two decimal places. Do not include any symbols, explanations, or additional text in the output, no explanation, no symbols, no text. Do not show the word ```html in output."
+            "Directly copy the final calculated percentage number of Match Score (%) from resume_summary, rounded to two decimal places. Do not include any symbols, explanations, or additional text in the output, no explanation, no symbols, no text. Do not show the word ```html in output."
         )
         match_score_str = await call_ai_api(match_score_prompt)
         try:
