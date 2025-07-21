@@ -379,7 +379,7 @@ async def compare_texts(job_text: str, resume_text: str) -> dict:
 
         # c. Match Score
         match_score_prompt = (
-            "Add an addition column titled as "Match Weight" to the job_summary comparison table, and assign weight numbers to the column based on the Match Status of each line: If the Match Status is Strong, assign number1; If the Match Status is Moderate-Strong, assign number 0.8; If the Match Status is Partial, assign number 0.5; If the Match Status is Lack, assign number 0. The formula for calculating the match score is: Match Score (%) =(Sum of Match Weight)/(count of Match Weight). Return only the final percentage number, rounded to two decimal places. Do not include any symbols, explanations, or additional text in the output, no explanation, no symbols, no text. Do not show the word ```html in output."
+            "Add an addition column titled as Match Weight to the job_summary comparison table, and assign weight numbers to the column based on the Match Status of each line: If the Match Status is Strong, assign number1; If the Match Status is Moderate-Strong, assign number 0.8; If the Match Status is Partial, assign number 0.5; If the Match Status is Lack, assign number 0. The formula for calculating the match score is: Match Score (%) =(Sum of Match Weight)/(count of Match Weight). Return only the final percentage number, rounded to two decimal places. Do not include any symbols, explanations, or additional text in the output, no explanation, no symbols, no text. Do not show the word ```html in output."
         )
         match_score_str = await call_ai_api(match_score_prompt)
         try:
