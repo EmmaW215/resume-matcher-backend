@@ -7,8 +7,6 @@ The backend has been updated with improved CORS configuration to support multipl
 ### Supported Domains
 
 The following domains are now allowed by default:
-- `https://resume-matcher-frontend.vercel.app`
-- `https://resume-update-frontend.vercel.app`
 - `https://matchwise-ai.vercel.app`
 - `http://localhost:3000` (for local development)
 - `http://localhost:3001` (alternative local port)

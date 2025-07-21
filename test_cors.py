@@ -10,8 +10,6 @@ def test_cors_config():
     
     # Test origins
     test_origins = [
-        "https://resume-matcher-frontend.vercel.app",
-        "https://resume-update-frontend.vercel.app",
         "https://matchwise-ai.vercel.app",
         "http://localhost:3000",
         "http://localhost:3001",

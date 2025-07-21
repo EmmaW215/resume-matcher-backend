@@ -144,8 +144,6 @@ async def can_generate(uid: str = Query(...)):
 
 # CORS configuration - support multiple domains
 allowed_origins = [
-    "https://resume-matcher-frontend.vercel.app",
-    "https://resume-update-frontend.vercel.app", 
     "https://matchwise-ai.vercel.app",
     "http://localhost:3000",  # For local development
     "http://localhost:3001",  # Alternative local port
@@ -481,8 +479,8 @@ async def create_checkout_session(uid: str = Form(...), price_id: str = Form(...
         print("uid:", uid)
         print("price_id:", price_id)
         print("mode:", mode)
-        success_url = "https://resume-update-frontend.vercel.app/success?session_id={CHECKOUT_SESSION_ID}"
-        cancel_url = "https://resume-update-frontend.vercel.app/cancel"
+        success_url = "https://matchwise-ai.vercel.app/success?session_id={CHECKOUT_SESSION_ID}"
+        cancel_url = "https://matchwise-ai.vercel.app/cancel"
         if mode == "payment":
             session = stripe.checkout.Session.create(
                 payment_method_types=["card"],

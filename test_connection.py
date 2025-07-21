@@ -33,7 +33,7 @@ def test_cors_preflight():
     print("\n🔍 测试CORS预检请求...")
     
     backend_url = "https://resume-matcher-backend-rrrw.onrender.com"
-    frontend_origin = "https://resume-update-frontend.vercel.app"
+    frontend_origin = "https://matchwise-ai.vercel.app"
     
     headers = {
         'Origin': frontend_origin,
@@ -69,7 +69,7 @@ def test_frontend_connection():
     """Test frontend connectivity"""
     print("\n🔍 测试前端连接...")
     
-    frontend_url = "https://resume-update-frontend.vercel.app"
+    frontend_url = "https://matchwise-ai.vercel.app"
     
     try:
         response = requests.get(frontend_url, timeout=10)
